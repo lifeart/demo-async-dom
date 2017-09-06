@@ -7,6 +7,25 @@ var worker =  new Worker('ww.js');
 })();
 
 
+// Setup isScrolling variable
+var isScrolling;
+
+// Listen for scroll events
+window.addEventListener('scroll', function ( event ) {
+
+    // Clear our timeout throughout the scroll
+    window.clearTimeout( isScrolling );
+
+    // Set a timeout to run after scrolling ends
+    isScrolling = setTimeout(function() {
+      isScrolling = false;
+        // Run the callback
+        //console.log( 'Scrolling has stopped.' );
+
+    }, 66);
+
+}, false);
+
 var _navigator = {
 	userAgent: navigator.userAgent,
 	platform: navigator.platform,
@@ -65,7 +84,23 @@ window.onblur = function() {
 		uid: '_onBlur'
 	});
 }
+var timePerLastFrame = 0;
+function shouldSkip(data) {
+  if (data.length) {
+    return false;
+  }
+  if ((isScrolling || document.hidden) && data.optional) {
+    return true;
+  }
+  if (timePerLastFrame > 15 && data.optional) {
+    timePerLastFrame--;
+    return true;
+  } else {
+    return false;
+  }
+}
 function performanceFeedback(delta) {
+    timePerLastFrame = delta;
 	// if (delta > 20) {
 		worker.postMessage({
 			uid: '_onPerformanceFeedback',
@@ -77,15 +112,23 @@ var mid = 0;
 worker.onmessage = function(e) {
 	start = Date.now();
 	mid++;
-	// console.log('resived',mid);
-	requestAnimationFrame(function(){
-		var result = performAction(e);
-		performanceFeedback(Date.now()-start);
-		if (e.data.cb) {
-			result.uid = e.data.uid;
-			worker.postMessage(result);
-		}
-	});
+  if (shouldSkip(e.data)) {
+    if (e.data.cb) {
+      worker.postMessage({
+        uid: e.data.uid
+      });
+    }
+  } else {
+    requestAnimationFrame(function(){
+  		var result = performAction(e);
+  		performanceFeedback(Date.now()-start);
+  		if (e.data.cb) {
+  			result.uid = e.data.uid;
+  			worker.postMessage(result);
+  		}
+  	});
+  }
+
 }
 
 var nodesCache = [];

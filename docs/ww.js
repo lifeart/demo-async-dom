@@ -195,6 +195,7 @@ function scheduleColorUpdate(id) {
 		asyncSendMessage({
             action: 'setStyle',
             id: id,
+            optional: true,
             attribute: 'background-color',
             value: getRandomColor()
         }).then(function(){
