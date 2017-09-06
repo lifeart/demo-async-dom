@@ -1,2 +1,2 @@
 # demo-async-dom
-Demo page with async dom and wrebworkers
+[Demo page](https://lifeart.github.io/demo-async-dom/) with async dom and wrebworkers
