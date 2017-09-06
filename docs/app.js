@@ -89,17 +89,36 @@ function shouldSkip(data) {
   if (data.length) {
     return false;
   }
+  if (renderConfig.disableOptional && data.optional) {
+    return true;
+  }
   if ((isScrolling || document.hidden) && data.optional) {
     return true;
   }
   if (timePerLastFrame > 15 && data.optional) {
-    timePerLastFrame--;
+    timePerLastFrame -= 0.2;
     return true;
   } else {
     return false;
   }
 }
+function smartBatchSort(actions) {
+
+  var priorityActionsMap = {
+    'createNode': 1,
+    'setAttribute': 2,
+    'bodyAppendChild': 3
+  };
+
+  return actions.sort((a,b)=>{
+    return priorityActionsMap[a.action] - priorityActionsMap[b.action];
+  });
+  // priority - create, style, append
+}
 function performanceFeedback(delta) {
+    if (delta < 10) {
+      return;
+    }
     timePerLastFrame = delta;
 	// if (delta > 20) {
 		worker.postMessage({
@@ -110,27 +129,20 @@ function performanceFeedback(delta) {
 }
 var mid = 0;
 worker.onmessage = function(e) {
-	start = Date.now();
 	mid++;
-  if (shouldSkip(e.data)) {
-    if (e.data.cb) {
-      worker.postMessage({
-        uid: e.data.uid
-      });
-    }
-  } else {
-    requestAnimationFrame(function(){
-  		var result = performAction(e);
-  		performanceFeedback(Date.now()-start);
-  		if (e.data.cb) {
-  			result.uid = e.data.uid;
-  			worker.postMessage(result);
-  		}
-  	});
-  }
-
+  var start = Date.now();
+  requestAnimationFrame(function(){
+    var result = performAction(e);
+  	if (e.data.cb) {
+  		result.uid = e.data.uid;
+  		worker.postMessage(result);
+  	}
+    performanceFeedback(Date.now()-start);
+  });
 }
-
+var renderConfig = {
+  disableOptional: false
+}
 var nodesCache = [];
 
 function getNode(id) {
@@ -216,6 +228,11 @@ function addClass(data) {
 }
 function evaluateAction(data) {
 
+  if (shouldSkip(data)) {
+    return {};
+  }
+
+  var start = Date.now();
 	var actions = {
 		'createNode': createNode,
 		'focus': focusEl,
@@ -232,7 +249,8 @@ function evaluateAction(data) {
 	}
 
 	if (data.action) {
-		var result = actions[data.action](data);
+    var result = actions[data.action](data);
+    performanceFeedback(Date.now()-start);
 		return getNodeData(data);
 	} else {
 		return {}
@@ -243,7 +261,7 @@ function performAction(e) {
 	var result = null;
 	if (e.data.length) {
 		result = [];
-		e.data.forEach(data => {
+		smartBatchSort(e.data).forEach(data => {
 			result.push(evaluateAction(data));
 		});
 	} else {

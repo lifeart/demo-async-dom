@@ -213,6 +213,7 @@ async function _initWebApp() {
             {
                 action: 'setAttribute',
                 id: id,
+                optional: false,
                 attribute: 'style',
                 value: style
             }
