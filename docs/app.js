@@ -227,8 +227,6 @@ function addClass(data) {
 }
 function evaluateAction(data, callback) {
 
-  var start = Date.now();
-
   if (shouldSkip(data)) {
     return callback({});
   }
@@ -250,7 +248,6 @@ function evaluateAction(data, callback) {
 
 	if (data.action) {
     var result = actions[data.action](data);
-    performanceFeedback(Date.now()-start);
 		callback(result);
 	} else {
 		callback({});
