@@ -128,23 +128,16 @@ _this.onmessage = function(e) {
 var mid = 0;
 _this.sendMessage = function(data, callback) {
     maxId++;
-	mid++;
+    mid++;
     data.uid = maxId;
     if (callback) {
         uids[maxId] = callback
     }
     data.cb = callback ? true : false;
     _this.postMessage(data);
-	// console.log('sended',mid);
 }
 function adjustSpeed(data) {
-	// console.log(data);
-	// if (data > 10
-	// if (data.delta > 20) {
-		// slowDown(data.delta);
-	// } else {
-		// slowUp(data.delta);
-	// }
+
 }
 
 function getRandomColor() {
@@ -158,7 +151,6 @@ function getRandomColor() {
 var actionsList = [];
 var batchCallbacks = [];
 function sendBatch() {
-	// var cb = batchCallbacks.slice(0);
 	asyncBatchMessages(actionsList);
 	actionsList = [];
 }
@@ -167,13 +159,13 @@ var updateTimeout = null
 var packSize = 5;
 var batchTimeout = 400;
 var asyncBatch = function(action) {
-    actionsList.push(action);
+  actionsList.push(action);
 	if (actionsList.length > packSize) {
 		sendBatch();
 	}
-    updateTimeout = setTimeout(function() {
-        sendBatch();
-    }, batchTimeout);
+  updateTimeout = setTimeout(function() {
+      sendBatch();
+  }, batchTimeout);
 }
 function slowUp() {
 	if (packSize < 20) {
@@ -206,8 +198,7 @@ function scheduleColorUpdate(id) {
 }
 
 async function _initWebApp() {
-    // console.time('create');
-    for (let i = 0; i < 3000; i++) {
+    for (let i = 0; i < 7000; i++) {
         var id = i;
         var style = 'display:inline-block;width:10px;height:10px;background-color:' + getRandomColor() + ';';
         var actions = [{
@@ -232,5 +223,4 @@ async function _initWebApp() {
         await asyncBatchMessages(actions);
         scheduleColorUpdate(id);
     }
-    // console.timeEnd('create');
 }
