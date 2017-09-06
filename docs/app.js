@@ -116,28 +116,27 @@ function smartBatchSort(actions) {
   // priority - create, style, append
 }
 function performanceFeedback(delta) {
-    if (delta < 10) {
+    if (timePerLastFrame < 10 && delta < 10) {
       return;
     }
     timePerLastFrame = delta;
-	// if (delta > 20) {
 		worker.postMessage({
 			uid: '_onPerformanceFeedback',
 			delta: delta
 		});
-	// }
 }
 var mid = 0;
-worker.onmessage = function(e) {
+worker.onmessage = (e)=>{
 	mid++;
-  var start = Date.now();
-  requestAnimationFrame(function(){
-    var result = performAction(e);
-  	if (e.data.cb) {
-  		result.uid = e.data.uid;
-  		worker.postMessage(result);
-  	}
-    performanceFeedback(Date.now()-start);
+  requestAnimationFrame(()=>{
+    var start = Date.now();
+    performAction(e,(result)=>{
+      if (e.data.cb) {
+    		result.uid = e.data.uid;
+    		worker.postMessage(result);
+    	}
+      performanceFeedback(Date.now()-start);
+    });
   });
 }
 var renderConfig = {
@@ -226,13 +225,14 @@ function focusEl(data) {
 function addClass(data) {
 	return getNode(data.id).classList.add(data.class);
 }
-function evaluateAction(data) {
-
-  if (shouldSkip(data)) {
-    return {};
-  }
+function evaluateAction(data, callback) {
 
   var start = Date.now();
+
+  if (shouldSkip(data)) {
+    return callback({});
+  }
+
 	var actions = {
 		'createNode': createNode,
 		'focus': focusEl,
@@ -251,22 +251,26 @@ function evaluateAction(data) {
 	if (data.action) {
     var result = actions[data.action](data);
     performanceFeedback(Date.now()-start);
-		return getNodeData(data);
+		callback(result);
 	} else {
-		return {}
+		callback({});
 	}
 }
-function performAction(e) {
+function performAction(e,callback) {
 
-	var result = null;
+	var result = [];
 	if (e.data.length) {
-		result = [];
 		smartBatchSort(e.data).forEach(data => {
-			result.push(evaluateAction(data));
+      evaluateAction(data, (item)=>{
+        result.push(item);
+        if (result.length === e.data.length) {
+          callback(result);
+        }
+      });
+			result.push();
 		});
 	} else {
-		result = evaluateAction(e.data);
+		evaluateAction(e.data,callback);
 	}
-	return result;
 
 }
