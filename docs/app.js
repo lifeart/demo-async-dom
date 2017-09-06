@@ -128,8 +128,8 @@ function performanceFeedback(delta) {
 var mid = 0;
 worker.onmessage = (e)=>{
 	mid++;
+  var start = Date.now();
   requestAnimationFrame(()=>{
-    var start = Date.now();
     performAction(e,(result)=>{
       if (e.data.cb) {
     		result.uid = e.data.uid;
