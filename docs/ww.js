@@ -240,7 +240,7 @@ function scheduleVisibilityUpdate(id) {
 async function _initWebApp() {
     for (let i = 0; i < 7000; i++) {
         var id = i;
-        var style = 'display:inline-block;margin-left:6px;width:10px;height:10px;transition: background-color 0.5s ease;background-color:' + getRandomColor() + ';';
+        var style = 'cursor:pointer;display:inline-block;margin-left:6px;width:10px;height:10px;transition: background-color 0.5s ease;background-color:' + getRandomColor() + ';';
         var actions = [{
                 action: 'createNode',
                 id: id,
@@ -256,7 +256,7 @@ async function _initWebApp() {
 				name: 'click',
 				callback: async function(e) {
 					await asyncSendMessage({
-						action: 'setStyle',
+						action: 'removeNode',
 						id: e.target,
 						attribute: 'background-color',
 						value: 'white'
@@ -268,7 +268,7 @@ async function _initWebApp() {
 				id: id,
 				name: 'dblclick',
 				callback: async function(e) {
-					asyncSendMessage({id:e.target, action: 'alert', text: 'You clicked on Me (#'+e.target+')!'});
+					asyncSendMessage({id:e.target, action: 'alert', text: 'You double clicked on Me (#'+e.target+')!'});
 				}
 			},
 			{

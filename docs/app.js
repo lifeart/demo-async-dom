@@ -385,7 +385,7 @@ function bodyAppendChild(data) {
 function removeNode(data) {
 	var node = getNode(data.id);
 	delete nodesCache[data.id];
-	return node.parentNode.removeChild(node);
+	node.parentNode.removeChild(node);
 }
 function removeClass(data) {
 	return getNode(data.id).classList.remove(data.class);
