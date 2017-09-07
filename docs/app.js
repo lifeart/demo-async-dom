@@ -1,4 +1,16 @@
 var worker =  new Worker('ww.js');
+
+//https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
+var isInViewport = function (elem) {
+    var bounding = elem.getBoundingClientRect();
+    return (
+        bounding.top >= 0 &&
+        bounding.left >= 0 &&
+        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+};
+
 function sendMessage(data) {
   worker.postMessage(data);
 }
@@ -12,6 +24,7 @@ var renderConfig = {
   disableOptional: false,
   isScrolling: undefined,
   totalActions: 0,
+  skipNotInVewport: true,
   timePerLastFrame: 0
 };
 
@@ -318,7 +331,17 @@ function setAttribute(data) {
 	return getNode(data.id).setAttribute(data.attribute,data.value);
 }
 function setStyle(data) {
-	return getNode(data.id).style[data.attribute] = data.value;
+	var node = getNode(data.id);
+	if (data.optional && renderConfig.skipNotInVewport) {
+		if (!isInViewport(node)) {
+			log('!isInViewport',data);
+			return {
+				skip:true
+			};
+		}
+		
+	}
+	return node.style[data.attribute] = data.value;
 }
 function headAppendChild(data) {
 	var node = getNode(data.id);
