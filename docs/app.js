@@ -1,13 +1,19 @@
 var worker =  new Worker('ww.js');
+var viewportHeight = 0;
+var viewportWidth = 0;
 
+function calcViewportSize() {
+	viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
+	viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
+}
 //https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
 var isInViewport = function (elem) {
     var bounding = elem.getBoundingClientRect();
     return (
         bounding.top >= 0 &&
         bounding.left >= 0 &&
-        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+        bounding.bottom <= viewportHeight &&
+        bounding.right <= viewportWidth
     );
 };
 
@@ -36,12 +42,17 @@ var _navigator = {
 
 // Listen for scroll events
 window.addEventListener('scroll', function ( event ) {
+	
+	if (document.body.style['pointer-events'] !== 'none') {
+		document.body.style['pointer-events'] = 'none';	
+	}
 
     // Clear our timeout throughout the scroll
     window.clearTimeout( renderConfig.isScrolling );
 
     // Set a timeout to run after scrolling ends
     renderConfig.isScrolling = setTimeout(function() {
+		document.body.style['pointer-events'] = 'auto';
       renderConfig.isScrolling = false;
         // Run the callback
         //console.log( 'Scrolling has stopped.' );
@@ -141,7 +152,8 @@ function smartBatchSort(actions) {
   var priorityActionsMap = {
     'createNode': 1,
     'setAttribute': 2,
-    'bodyAppendChild': 3
+    'addEventListener': 3,
+    'bodyAppendChild': 4
   };
 
   return actions.sort((a,b)=>{
@@ -256,14 +268,19 @@ function skip(action, result) {
   }
 }
 function actionLoop(startMs) {
+  calcViewportSize();
   var newActions = getActionsForLoop();
   log('actions.length',newActions.length);
   var totalActions = newActions.length;
   newActions.forEach(action=>{
     performAction(action, (result)=>{
-      if (result.skip) {
+      if (result.skip || (result.result && result.skip)) {
         totalActions--;
       }
+	  if (result.result && result.result.timeShift) {
+		totalActions--;
+		startMs -= result.timeShift; 
+	  }
       skip(action, result);
     });
   });
@@ -356,7 +373,6 @@ function removeNode(data) {
 	delete nodesCache[data.id];
 	return node.parentNode.removeChild(node);
 }
-
 function removeClass(data) {
 	return getNode(data.id).classList.remove(data.class);
 }
@@ -364,7 +380,6 @@ function removeClass(data) {
 function getElementById(data) {
 	return getNodeData(data);
 }
-
 function getNodeData(data) {
 	var node = getNode(data.id);
 	if (!node) {
@@ -394,6 +409,63 @@ function focusEl(data) {
 function addClass(data) {
 	return getNode(data.id).classList.add(data.class);
 }
+function eventToObject(e) {
+	return {
+		altKey: e.altKey,
+		bubbles: e.bubbles,
+		button: e.button,
+		buttons: e.buttons,
+		cancelBubble: e.cancelBubble,
+		cancelable: e.cancelable,
+		clientX: e.clientX,
+		clientY: e.clientY,
+		composed: e.composed,
+		ctrlKey: e.ctrlKey,
+		currentTarget: e.currentTarget?e.currentTarget.id:null,
+		defaultPrevented: e.defaultPrevented,
+		detail: e.detail,
+		eventPhase: e.eventPhase,
+		eventPhase: e.fromElement?e.fromElement.id:null,
+		isTrusted: e.isTrusted,
+		layerX: e.layerX,
+		layerY: e.layerY,
+		metaKey: e.metaKey,
+		movementX: e.movementX,
+		movementY: e.movementY,
+		offsetX: e.offsetX,
+		offsetY: e.offsetY,
+		pageX: e.pageX,
+		pageY: e.pageY,
+		returnValue: e.returnValue,
+		screenX: e.screenX,
+		screenY: e.screenY,
+		shiftKey: e.shiftKey,
+		srcElement: e.srcElement?e.srcElement.id:null,
+		target: e.target.id,
+		timeStamp: e.timeStamp,
+		toElement: e.toElement?e.toElement.id:null,
+		which: e.which,
+		x: e.x,
+		y: e.y
+	};
+}
+function customAlert(data) {
+	var blockStart = performance.now();
+	alert(data.text);
+	return {
+		timeShift: performance.now()-blockStart
+	}
+}
+function customAddEventListener(data) {
+	log('addEventListener',data);
+	var eventCallback = function(domEvent) {
+		var e = eventToObject(domEvent);
+		e.uid = `_${data.uid}_${data.name}`;
+		sendMessage(e);
+	};
+	getNode(data.id).addEventListener(data.name, eventCallback.bind(data), false);
+	return {};
+}
 function evaluateAction(data, callback) {
 
   if (shouldSkip(data)) {
@@ -406,6 +478,8 @@ function evaluateAction(data, callback) {
 		'createNode': createNode,
 		'focus': focusEl,
 		'setHTML': setHTML,
+		'alert': customAlert,
+		'addEventListener': customAddEventListener,
 		'headAppendChild': headAppendChild,
 		'bodyAppendChild': bodyAppendChild,
 		'appendChild': appendChild,

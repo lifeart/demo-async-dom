@@ -35,6 +35,17 @@ function asyncHeadAppendChild(id) {
     });
 }
 
+function asyncAddEventListener(id) {
+    return asyncSendMessage({
+        action: 'addEventListener',
+        id: id,
+		name: 'click',
+		callback: () => {
+			console.log(arguments, 'clicked');
+		}
+    });
+}
+
 function asyncGetElementById(id) {
     return asyncSendMessage({
         action: 'getElementById',
@@ -133,6 +144,21 @@ _this.sendMessage = function(data, callback) {
     if (callback) {
         uids[maxId] = callback
     }
+	if (typeof data.callback === 'function') {
+		uids[`_${maxId}_${data.name}`] = data.callback;
+		delete data.callback;
+	}
+	if (data.length) {
+		data.forEach((el)=>{
+			if (typeof el.callback === 'function') {
+				maxId++;
+				uids[`_${maxId}_${el.name}`] = el.callback;
+				el.uid = maxId;
+				delete el.callback;
+			}
+		});
+	}
+	// console.log(data);
     data.cb = callback ? true : false;
     _this.postMessage(data);
 }
@@ -223,7 +249,56 @@ async function _initWebApp() {
             {
                 action: 'bodyAppendChild',
                 id: id
-            },
+            }, 
+			{
+				action: 'addEventListener',
+				id: id,
+				name: 'click',
+				callback: async function(e) {
+					await asyncSendMessage({
+						action: 'setStyle',
+						id: e.target,
+						attribute: 'background-color',
+						value: 'white'
+					})
+				}
+			},	
+			{
+				action: 'addEventListener',
+				id: id,
+				name: 'dblclick',
+				callback: async function(e) {
+					asyncSendMessage({id:e.target, action: 'alert', text: 'You clicked on Me (#'+e.target+')!'});
+				}
+			},
+			{
+				action: 'addEventListener',
+				id: id,
+				name: 'mouseenter',
+				callback: function(e) {
+					asyncSendMessage({
+						action: 'setStyle',
+						id: e.target,
+						attribute: 'background-color',
+						value: 'white'
+					})
+				}
+			},
+			{
+				action: 'addEventListener',
+				id: id,
+				name: 'mouseleave',
+				callback: function(e) {
+					setTimeout(()=>{
+						asyncSendMessage({
+							action: 'setStyle',
+							id: e.target,
+							attribute: 'background-color',
+							value: getRandomColor()
+						})
+					}, 2500);
+				}
+			},
             {
                 action: 'setAttribute',
                 id: id,
@@ -235,8 +310,17 @@ async function _initWebApp() {
         // await asyncCreateElement(id,'div');
         // await asyncBodyAppendChild(id);
         // await asyncSetAttribute(id,'style',);
-        await asyncBatchMessages(actions);
-        scheduleColorUpdate(id);
-        scheduleVisibilityUpdate(id);
+		// await
+		if (i % 10 === 0) {
+			await asyncBatchMessages(actions);
+			scheduleColorUpdate(id);
+			scheduleVisibilityUpdate(id);
+		} else {
+			asyncBatchMessages(actions);
+			scheduleColorUpdate(id);
+			scheduleVisibilityUpdate(id);
+		}
+        
+       
     }
 }
