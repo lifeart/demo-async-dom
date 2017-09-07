@@ -255,6 +255,11 @@ async function _initWebApp() {
 				id: id,
 				name: 'click',
 				callback: async function(e) {
+					if (!hasFullDom) {
+						return;
+					}
+					var result = await asyncSendMessage({action:'getStyleValue',style:'background-color',id:e.target});
+					updateScore(result.result);
 					await asyncSendMessage({
 						action: 'removeNode',
 						id: e.target,
@@ -324,9 +329,35 @@ async function _initWebApp() {
        
     }
 	
+	var score = 0;
+	function updateScore(result) {
+		if (result === 'black') {
+			score += 10;
+		} else if (result === 'white') {
+			score += 5;
+		} else {
+			score -= 2;
+		}
+		asyncSendMessage({id: scoreBoardId, action: 'setTextContent', textContent: `You Score: ${score}`});
+	}
+	
 	var containerId = 'git-hub-container';
 	var localId = 'git-hub-link';
+	var scoreBoardId = 'score-board';
+	var hasFullDom = false;
 	await asyncBatchMessages([
+		{
+			action: 'createNode',
+			id: scoreBoardId,
+			textContent: 'You Score: 0',
+			tag: 'div'
+		},
+		{
+			action: 'setAttribute',
+			id: scoreBoardId,
+			attribute: 'style',
+			value: 'position:fixed; top:0; padding: 4px; right:0; width: 250px;background-color:rgba(0,0,0,0.7);color:#fff;'
+		},
 		{
 			action: 'createNode',
 			id: containerId,
@@ -350,6 +381,10 @@ async function _initWebApp() {
 			childrenId: localId
 		},
 		{
+			action: 'bodyAppendChild',
+			id: scoreBoardId,
+		},
+		{
 			action: 'createNode',
 			id: localId,
 			href: 'https://github.com/lifeart/demo-async-dom',
@@ -363,4 +398,5 @@ async function _initWebApp() {
 			id: containerId
 		}
 	]);
+	hasFullDom = true;
 }

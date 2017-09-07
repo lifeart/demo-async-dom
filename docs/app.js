@@ -357,6 +357,9 @@ function appendChild(data) {
 function setHTML(data) {
 	return getNode(data.id).innerHTML = data.html;
 }
+function setTextContent(data) {
+	return getNode(data.id).textContent = data.textContent;
+}
 
 function setAttribute(data) {
 	return getNode(data.id).setAttribute(data.attribute,data.value);
@@ -422,6 +425,9 @@ function focusEl(data) {
 
 function addClass(data) {
 	return getNode(data.id).classList.add(data.class);
+}
+function getStyleValue(data) {
+	return getNode(data.id).style[data.style];
 }
 function eventToObject(e) {
 	return {
@@ -492,6 +498,8 @@ function evaluateAction(data, callback) {
 		'createNode': createNode,
 		'focus': focusEl,
 		'setHTML': setHTML,
+		'getStyleValue': getStyleValue,
+		'setTextContent': setTextContent,
 		'alert': customAlert,
 		'addEventListener': customAddEventListener,
 		'headAppendChild': headAppendChild,
