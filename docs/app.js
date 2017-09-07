@@ -11,6 +11,7 @@ function sendMessage(data) {
 var renderConfig = {
   disableOptional: false,
   isScrolling: undefined,
+  totalActions: 0,
   timePerLastFrame: 0
 };
 
@@ -135,13 +136,14 @@ function smartBatchSort(actions) {
   });
   // priority - create, style, append
 }
-function performanceFeedback(delta) {
+function performanceFeedback(delta, actions) {
     // var realDelta = delta / 1000;
     // if (isNaN(realDelta)) {
     //   return;
     // }
     calcAvgActionTime();
     renderConfig.timePerLastFrame = delta;
+    renderConfig.totalActions = actions;
 		// sendMessage({
 		// 	uid: '_onPerformanceFeedback',
 		// 	delta: delta
@@ -198,6 +200,13 @@ var criticalSize = 1500;
 var maxSizeBeforeFlush = 300;
 var flushSize = 50;
 function getOptimalActionsCap() {
+
+  var optimalCandidate = Math.round(fpsMs / (renderConfig.timePerLastFrame/renderConfig.totalActions));
+
+  if (isNaN(optimalCandidate) || !isFinite(optimalCandidate)) {
+    optimalCandidate = 0;
+  }
+
   var optimalCap = Math.round((fpsMs*3)/(avgActionTime || 1) || 10);
   if ( optimalCap > 1 ) {
     optimalCap--;
@@ -211,6 +220,11 @@ function getOptimalActionsCap() {
   }
   if (maxLength>criticalSize) {
     return criticalSize;
+  }
+  if (optimalCap < optimalCandidate && flushSize > optimalCap) {
+    if (optimalCandidate <= maxLength) {
+      optimalCap = optimalCandidate;
+    }
   }
   return optimalCap;
 }
@@ -253,7 +267,7 @@ function actionLoop(startMs) {
     delta  = 5;
   }
   if (totalActions) {
-    performanceFeedback(feedbackDelta);
+    performanceFeedback(feedbackDelta,totalActions);
   }
   requestAnimationFrame(actionLoop);
 }
