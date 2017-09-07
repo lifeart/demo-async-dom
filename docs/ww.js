@@ -1,6 +1,14 @@
 var _this = self;
-
+var removedNodes = [];
+var middlewareActions = [];
+function middleware(data) {
+	middlewareActions.forEach(action=>action(data));
+}
+function addMiddleware(action) {
+	middlewareActions.push(action);
+}
 function asyncSendMessage(data) {
+	middleware(data);
     return new Promise(function(resolve, reject) {
         _this.sendMessage(data, function(result) {
             resolve(result);
@@ -60,6 +68,19 @@ function asyncCreateElement(id, tagName) {
         tag: tagName
     });
 }
+
+
+addMiddleware(function(data){
+	if (data.action === 'removeNode') {
+		removedNodes.push(data.id);
+	}
+	if (data.action === 'setStyle' && removedNodes.indexOf(data.id) > -1) {
+		data.selector = 'body';
+		data.id = undefined;
+	}	
+});
+
+
 
 var navigator = {};
 var elId = 0;

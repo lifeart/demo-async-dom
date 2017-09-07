@@ -121,6 +121,11 @@ window.onblur = function() {
 }
 var fpsMs = 16;
 function shouldSkip(data) {
+  if (data.action !== 'createNode' && data.id) {
+	if (!nodesCache[data.id]) {
+		return true;
+	}
+  }
   if (data.length || !data.optional) {
     return false;
   }
@@ -157,7 +162,8 @@ function smartBatchSort(actions) {
     'setAttribute': 2,
     'addEventListener': 3,
 	'appendChild': 4,
-    'bodyAppendChild': 5
+    'bodyAppendChild': 5,
+	'removeNode': 6
   };
 
   return actions.sort((a,b)=>{
@@ -326,9 +332,11 @@ function log() {
 
 var nodesCache = [];
 
-function getNode(id) {
+function getNode(id, data) {
 	if (!nodesCache[id]) {
 		nodesCache[id] = document.getElementById(id);
+	}
+		return document.querySelector(data.selector);
 	}
 	return nodesCache[id] || document.body;
 }
@@ -368,7 +376,7 @@ function setAttribute(data) {
 	return getNode(data.id).setAttribute(data.attribute,data.value);
 }
 function setStyle(data) {
-	var node = getNode(data.id);
+	var node = getNode(data.id, data);
 	if (!node) {
 		return;
 	}
@@ -391,7 +399,11 @@ function bodyAppendChild(data) {
 	var node = getNode(data.id);
 	node && document.body.appendChild(node);
 }
+function removeEventListeners(data) {
+	
+}
 function removeNode(data) {
+	removeEventListeners(data);
 	var node = getNode(data.id);
 	delete nodesCache[data.id];
 	node.parentNode.removeChild(node);
