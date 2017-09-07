@@ -185,13 +185,27 @@ var colorUpdateInterval = 10000;
 function scheduleColorUpdate(id) {
     setTimeout(function() {
 		asyncSendMessage({
-            action: 'setStyle',
-            id: id,
-            optional: true,
-            attribute: 'background-color',
-            value: getRandomColor()
-        }).then(function(){
+        action: 'setStyle',
+        id: id,
+        optional: true,
+        attribute: 'background-color',
+        value: getRandomColor()
+    }).then(function(){
 			scheduleColorUpdate(id);
+		});
+
+    }, colorUpdateInterval*Math.sin(Date.now()));
+}
+function scheduleVisibilityUpdate(id) {
+    setTimeout(function() {
+		asyncSendMessage({
+        action: 'setStyle',
+        id: id,
+        optional: true,
+        attribute: 'visibility',
+        value: Math.random() >= 0.5 ? 'visible': 'hidden'
+    }).then(function(){
+			scheduleVisibilityUpdate(id);
 		});
 
     }, colorUpdateInterval*Math.sin(Date.now()));
@@ -223,5 +237,6 @@ async function _initWebApp() {
         // await asyncSetAttribute(id,'style',);
         await asyncBatchMessages(actions);
         scheduleColorUpdate(id);
+        scheduleVisibilityUpdate(id);
     }
 }

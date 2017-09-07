@@ -1,24 +1,34 @@
 var worker =  new Worker('ww.js');
-
+function sendMessage(data) {
+  worker.postMessage(data);
+}
 (function() {
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
                               window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
   window.requestAnimationFrame = requestAnimationFrame;
 })();
 
+var renderConfig = {
+  disableOptional: false,
+  isScrolling: undefined,
+  timePerLastFrame: 0
+};
 
-// Setup isScrolling variable
-var isScrolling;
+var _navigator = {
+	userAgent: navigator.userAgent,
+	platform: navigator.platform,
+	language: navigator.language,
+};
 
 // Listen for scroll events
 window.addEventListener('scroll', function ( event ) {
 
     // Clear our timeout throughout the scroll
-    window.clearTimeout( isScrolling );
+    window.clearTimeout( renderConfig.isScrolling );
 
     // Set a timeout to run after scrolling ends
-    isScrolling = setTimeout(function() {
-      isScrolling = false;
+    renderConfig.isScrolling = setTimeout(function() {
+      renderConfig.isScrolling = false;
         // Run the callback
         //console.log( 'Scrolling has stopped.' );
 
@@ -26,20 +36,16 @@ window.addEventListener('scroll', function ( event ) {
 
 }, false);
 
-var _navigator = {
-	userAgent: navigator.userAgent,
-	platform: navigator.platform,
-	language: navigator.language,
-};
-worker.postMessage({
+
+sendMessage({
 	uid: '_setNavigator',
 	navigator: _navigator
 });
-worker.postMessage({
+sendMessage({
 	uid: 'set_modernizr_custom',
 	modernizr_custom: {}
 });
-worker.postMessage({
+sendMessage({
 	uid: '_setLocation',
 	location: {
 		hash: window.location.hash,
@@ -54,37 +60,38 @@ worker.postMessage({
 		state: window.history.state,
 	}
 });
-worker.postMessage({
+
+
+sendMessage({
 	uid: '_setScreen',
 	screen: {
 		width: window.screen.width,
 		height: window.screen.height,
 	}
 });
-worker.postMessage({
+sendMessage({
 	uid: 'init',
 });
 window.onfocus = function() {
-	worker.postMessage({
+	sendMessage({
 		uid: '_onFocus',
 	});
 }
 window.onhashchange = function() {
-	worker.postMessage({
+	sendMessage({
 		uid: '_onhashchange',
 	});
 }
 window.onpopstate = function() {
-	worker.postMessage({
+	sendMessage({
 		uid: '_onpopstate',
 	});
 }
 window.onblur = function() {
-	worker.postMessage({
+	sendMessage({
 		uid: '_onBlur'
 	});
 }
-var timePerLastFrame = 0;
 function shouldSkip(data) {
   if (data.length) {
     return false;
@@ -92,11 +99,11 @@ function shouldSkip(data) {
   if (renderConfig.disableOptional && data.optional) {
     return true;
   }
-  if ((isScrolling || document.hidden) && data.optional) {
+  if ((renderConfig.isScrolling || document.hidden) && data.optional) {
     return true;
   }
-  if (timePerLastFrame > 15 && data.optional) {
-    timePerLastFrame -= 0.2;
+  if (renderConfig.timePerLastFrame > 15 && data.optional) {
+    renderConfig.timePerLastFrame -= 0.2;
     return true;
   } else {
     return false;
@@ -116,11 +123,11 @@ function smartBatchSort(actions) {
   // priority - create, style, append
 }
 function performanceFeedback(delta) {
-    if (timePerLastFrame < 10 && delta < 10) {
+    if (renderConfig.timePerLastFrame < 10 && delta < 10) {
       return;
     }
-    timePerLastFrame = delta;
-		worker.postMessage({
+    renderConfig.timePerLastFrame = delta;
+		sendMessage({
 			uid: '_onPerformanceFeedback',
 			delta: delta
 		});
@@ -133,15 +140,25 @@ worker.onmessage = (e)=>{
     performAction(e,(result)=>{
       if (e.data.cb) {
     		result.uid = e.data.uid;
-    		worker.postMessage(result);
+        log('cb', e.data, result);
+    		sendMessage(result);
     	}
       performanceFeedback(Date.now()-start);
     });
   });
 }
-var renderConfig = {
-  disableOptional: false
+
+var debug = false;
+
+function log() {
+  if (!debug) {
+    return;
+  }
+  console.log.apply(this,Array.prototype.slice.call(arguments));
 }
+
+
+
 var nodesCache = [];
 
 function getNode(id) {
@@ -171,7 +188,6 @@ function setAttribute(data) {
 	return getNode(data.id).setAttribute(data.attribute,data.value);
 }
 function setStyle(data) {
-	// console.log(data);
 	return getNode(data.id).style[data.attribute] = data.value;
 }
 function headAppendChild(data) {
@@ -228,6 +244,7 @@ function addClass(data) {
 function evaluateAction(data, callback) {
 
   if (shouldSkip(data)) {
+    log('skip',data);
     return callback({});
   }
 
@@ -247,10 +264,11 @@ function evaluateAction(data, callback) {
 	}
 
 	if (data.action) {
-    var result = actions[data.action](data);
-		callback(result);
+		callback({result: actions[data.action](data)});
+    log('action',data);
 	} else {
 		callback({});
+    log('no-action',data);
 	}
 }
 function performAction(e,callback) {
