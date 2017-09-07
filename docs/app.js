@@ -153,7 +153,8 @@ function smartBatchSort(actions) {
     'createNode': 1,
     'setAttribute': 2,
     'addEventListener': 3,
-    'bodyAppendChild': 4
+	'appendChild': 4,
+    'bodyAppendChild': 5
   };
 
   return actions.sort((a,b)=>{
@@ -200,7 +201,8 @@ function prioritySort(a,b) {
   if (!a.length && b.length) {
     return 1;
   }
-  return 0;
+  return a.uid - b.uid;
+  // return 0;
 }
 function getActionsForLoop() {
   var optimalCap = getOptimalActionsCap();
@@ -331,6 +333,18 @@ function getNode(id) {
 function createNode(data) {
 	var node = document.createElement(data.tag);
 	node.id = data.id
+	if (data.href) {
+		node.href = data.href;
+	}
+	if (data.textContent) {
+		node.textContent = data.textContent;
+	}
+	if (data.target) {
+		node.target = data.target;
+	}	
+	if (data.title) {
+		node.title = data.title;
+	}
 	nodesCache[data.id] = node;
 }
 

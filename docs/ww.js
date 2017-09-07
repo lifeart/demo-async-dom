@@ -323,4 +323,44 @@ async function _initWebApp() {
         
        
     }
+	
+	var containerId = 'git-hub-container';
+	var localId = 'git-hub-link';
+	await asyncBatchMessages([
+		{
+			action: 'createNode',
+			id: containerId,
+			tag: 'div'
+		},
+		{
+			action: 'setAttribute',
+			id: containerId,
+			attribute: 'style',
+			value: 'padding:4px;display:block;clear:left;text-align:center;transition: background-color 0.5s ease;background-color:#232323;'
+		},
+		{
+			action: 'setAttribute',
+			id: localId,
+			attribute: 'style',
+			value: 'text-decoration:none;color:#f2f2f2;'
+		},
+		{
+			action: 'appendChild',
+			id: containerId,
+			childrenId: localId
+		},
+		{
+			action: 'createNode',
+			id: localId,
+			href: 'https://github.com/lifeart/demo-async-dom',
+			target: '_blank',
+			title: 'View on GitHub',
+			textContent: 'GitHub Link / 7000 DOM Nodes / 1400 Events Per Second / 60 FPS',
+			tag: 'a'
+		},
+		{
+			action: 'bodyAppendChild',
+			id: containerId
+		}
+	]);
 }
