@@ -8,6 +8,9 @@ function calcViewportSize() {
 }
 //https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
 var isInViewport = function (elem) {
+	if (!elem) {
+		return false;
+	}
     var bounding = elem.getBoundingClientRect();
     return (
         bounding.top >= 0 &&
