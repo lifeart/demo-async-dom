@@ -61,7 +61,6 @@ sendMessage({
 	}
 });
 
-
 sendMessage({
 	uid: '_setScreen',
 	screen: {
@@ -92,6 +91,7 @@ window.onblur = function() {
 		uid: '_onBlur'
 	});
 }
+var fpsMs = 16;
 function shouldSkip(data) {
   if (data.length) {
     return false;
@@ -102,12 +102,22 @@ function shouldSkip(data) {
   if ((renderConfig.isScrolling || document.hidden) && data.optional) {
     return true;
   }
-  if (renderConfig.timePerLastFrame > 15 && data.optional) {
-    renderConfig.timePerLastFrame -= 0.2;
+  if (renderConfig.timePerLastFrame > (fpsMs + 0.2) && data.optional) {
+    renderConfig.timePerLastFrame -= getTimePerAction(data.action);
     return true;
   } else {
     return false;
   }
+}
+var actionTimes = {};
+function setTimePerAction(action, time) {
+  actionTimes[action] = time + 0.02;
+}
+function getTimePerAction(action) {
+  if (!actionTimes[action]) {
+    actionTimes[action] = 0.5;
+  }
+  return actionTimes[action];
 }
 function smartBatchSort(actions) {
 
@@ -123,29 +133,125 @@ function smartBatchSort(actions) {
   // priority - create, style, append
 }
 function performanceFeedback(delta) {
-    if (renderConfig.timePerLastFrame < 10 && delta < 10) {
-      return;
-    }
+    // var realDelta = delta / 1000;
+    // if (isNaN(realDelta)) {
+    //   return;
+    // }
+    calcAvgActionTime();
     renderConfig.timePerLastFrame = delta;
-		sendMessage({
-			uid: '_onPerformanceFeedback',
-			delta: delta
-		});
+		// sendMessage({
+		// 	uid: '_onPerformanceFeedback',
+		// 	delta: delta
+		// });
 }
-var mid = 0;
-worker.onmessage = (e)=>{
-	mid++;
-  var start = Date.now();
-  requestAnimationFrame(()=>{
-    performAction(e,(result)=>{
-      if (e.data.cb) {
-    		result.uid = e.data.uid;
-        log('cb', e.data, result);
+var actionsList = [];
+function actionScheduler(action) {
+  if (!shouldSkip(action)) {
+    actionsList.push(action);
+  } else {
+    skip(action);
+  }
+
+}
+function clearActions() {
+  actionsList = [];
+}
+var maxSizeBeforeFlush = 100;
+var flushSize = 50;
+function prioritySort(a,b) {
+  if (a.optional && !b.optional) {
+    return 1;
+  }
+  if (!a.optional && b.optional) {
+    return -1;
+  }
+  if (a.length && !b.length) {
+    return -1;
+  }
+  if (!a.length && b.length) {
+    return 1;
+  }
+  return 0;
+}
+function getActionsForLoop() {
+  var optimalCap = getOptimalActionsCap();
+  var maxLength = actionsList.length;
+  if (maxLength-1 < optimalCap) {
+    optimalCap = maxLength;
+  }
+  if (maxLength >= maxSizeBeforeFlush) {
+    optimalCap = flushSize;
+  }
+  actionsList = actionsList.sort(prioritySort);
+  var actions = actionsList.splice(0,optimalCap);
+  return actions;
+}
+var minLoop = {
+  actions: 0,
+  time: 20
+}
+var maxTime = {
+  actions: 0,
+  time: 0
+}
+var avgActionTime = 0;
+
+function calcAvgActionTime() {
+  avgActionTime = maxTime.time / maxTime.actions;
+}
+
+function getOptimalActionsCap() {
+  return Math.round(fpsMs/(avgActionTime || 1) || 10);
+}
+function skip(action) {
+  if (action.cb) {
+    var result = {
+      skip: true
+    }
+    result.uid = action.uid;
+    log('cb', action, result);
+    sendMessage(result);
+  }
+}
+function actionLoop(startMs) {
+  var newActions = getActionsForLoop();
+  log('actions.length',newActions.length);
+  var totalActions = newActions.length;
+  newActions.forEach(action=>{
+    //var ttl = performance.now();
+    performAction(action,(result)=>{
+      if (result.skip) {
+        totalActions--;
+      }
+      if (action.cb) {
+    		result.uid = action.uid;
+        log('cb', action, result);
     		sendMessage(result);
     	}
-      performanceFeedback(Date.now()-start);
     });
   });
+  var feedbackDelta = performance.now()-startMs;
+
+  if (feedbackDelta < minLoop.time && totalActions > 1) {
+    minLoop.time = feedbackDelta;
+    minLoop.actions = totalActions
+  }
+
+  if (feedbackDelta > maxTime.time && totalActions > 1) {
+    maxTime.time = feedbackDelta;
+    maxTime.actions = totalActions
+  }
+
+  var delta = fpsMs - feedbackDelta;
+  if (delta < 0) {
+    delta  = 5;
+  }
+  performanceFeedback(feedbackDelta);
+  requestAnimationFrame(actionLoop);
+}
+
+worker.onmessage = (e)=>{
+  actionScheduler(e.data);
 }
 
 var debug = false;
@@ -156,8 +262,6 @@ function log() {
   }
   console.log.apply(this,Array.prototype.slice.call(arguments));
 }
-
-
 
 var nodesCache = [];
 
@@ -245,8 +349,9 @@ function evaluateAction(data, callback) {
 
   if (shouldSkip(data)) {
     log('skip',data);
-    return callback({});
+    return callback({skip:true});
   }
+  var start = performance.now();
 
 	var actions = {
 		'createNode': createNode,
@@ -265,27 +370,28 @@ function evaluateAction(data, callback) {
 
 	if (data.action) {
 		callback({result: actions[data.action](data)});
+    setTimePerAction(data.action, performance.now()-start);
     log('action',data);
 	} else {
 		callback({});
     log('no-action',data);
 	}
 }
-function performAction(e,callback) {
+function performAction(data,callback) {
 
 	var result = [];
-	if (e.data.length) {
-		smartBatchSort(e.data).forEach(data => {
-      evaluateAction(data, (item)=>{
+	if (data.length) {
+		smartBatchSort(data).forEach(adata => {
+      evaluateAction(adata, (item)=>{
         result.push(item);
-        if (result.length === e.data.length) {
+        if (result.length === data.length) {
           callback(result);
         }
       });
-			result.push();
 		});
 	} else {
-		evaluateAction(e.data,callback);
+		evaluateAction(data,callback);
 	}
 
 }
+requestAnimationFrame(actionLoop);
