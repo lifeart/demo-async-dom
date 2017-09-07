@@ -199,6 +199,7 @@ function calcAvgActionTime() {
 var criticalSize = 1500;
 var maxSizeBeforeFlush = 300;
 var flushSize = 50;
+var commonPoolSize = fpsMs*2;
 function getOptimalActionsCap() {
 
   var optimalCandidate = Math.round(fpsMs / (renderConfig.timePerLastFrame/renderConfig.totalActions));
@@ -225,6 +226,9 @@ function getOptimalActionsCap() {
     if (optimalCandidate <= maxLength) {
       optimalCap = optimalCandidate;
     }
+  }
+  if (maxLength > commonPoolSize && optimalCap < commonPoolSize) {
+    optimalCap = commonPoolSize;
   }
   return optimalCap;
 }
