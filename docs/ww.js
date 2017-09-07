@@ -344,7 +344,7 @@ async function _initWebApp() {
 			attribute: 'style',
 			value: 'text-decoration:none;color:#f2f2f2;'
 		},
-		{s
+		{
 			action: 'appendChild',
 			id: containerId,
 			childrenId: localId
