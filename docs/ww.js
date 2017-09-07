@@ -338,7 +338,7 @@ async function _initWebApp() {
 		} else {
 			score -= 2;
 		}
-		asyncSendMessage({id: scoreBoardId, action: 'setTextContent', textContent: `You Score: ${score}`});
+		asyncSendMessage({id: scoreBoardId, action: 'setTextContent', textContent: `Your Score: ${score}`});
 	}
 	
 	var containerId = 'git-hub-container';
@@ -349,7 +349,7 @@ async function _initWebApp() {
 		{
 			action: 'createNode',
 			id: scoreBoardId,
-			textContent: 'You Score: 0',
+			textContent: 'Your Score: 0',
 			tag: 'div'
 		},
 		{
