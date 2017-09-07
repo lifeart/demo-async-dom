@@ -240,7 +240,7 @@ function scheduleVisibilityUpdate(id) {
 async function _initWebApp() {
     for (let i = 0; i < 7000; i++) {
         var id = i;
-        var style = 'display:inline-block;width:10px;height:10px;transition: background-color 0.5s ease;background-color:' + getRandomColor() + ';';
+        var style = 'display:inline-block;margin-left:6px;width:10px;height:10px;transition: background-color 0.5s ease;background-color:' + getRandomColor() + ';';
         var actions = [{
                 action: 'createNode',
                 id: id,
@@ -344,7 +344,7 @@ async function _initWebApp() {
 			attribute: 'style',
 			value: 'text-decoration:none;color:#f2f2f2;'
 		},
-		{
+		{s
 			action: 'appendChild',
 			id: containerId,
 			childrenId: localId
@@ -355,7 +355,7 @@ async function _initWebApp() {
 			href: 'https://github.com/lifeart/demo-async-dom',
 			target: '_blank',
 			title: 'View on GitHub',
-			textContent: 'GitHub Link / 7000 DOM Nodes / 1400 Events Per Second / 60 FPS',
+			textContent: 'GitHub Link / 7000 DOM Nodes / 1400+ Updates per Second / 60 FPS / 28 000 Event listeners',
 			tag: 'a'
 		},
 		{
