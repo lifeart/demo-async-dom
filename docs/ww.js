@@ -202,8 +202,8 @@ function scheduleVisibilityUpdate(id) {
         action: 'setStyle',
         id: id,
         optional: true,
-        attribute: 'visibility',
-        value: Math.random() >= 0.5 ? 'visible': 'hidden'
+        attribute: 'background-color',
+        value: Math.random() >= 0.5 ? 'black': getRandomColor()
     }).then(function(){
 			scheduleVisibilityUpdate(id);
 		});
@@ -214,7 +214,7 @@ function scheduleVisibilityUpdate(id) {
 async function _initWebApp() {
     for (let i = 0; i < 7000; i++) {
         var id = i;
-        var style = 'display:inline-block;width:10px;height:10px;background-color:' + getRandomColor() + ';';
+        var style = 'display:inline-block;width:10px;height:10px;transition: background-color 0.5s ease;background-color:' + getRandomColor() + ';';
         var actions = [{
                 action: 'createNode',
                 id: id,
