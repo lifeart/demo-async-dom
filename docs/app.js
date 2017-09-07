@@ -93,13 +93,16 @@ window.onblur = function() {
 }
 var fpsMs = 16;
 function shouldSkip(data) {
-  if (data.length) {
+  if (data.length || !data.optional) {
     return false;
   }
   if (renderConfig.disableOptional && data.optional) {
     return true;
   }
   if ((renderConfig.isScrolling || document.hidden) && data.optional) {
+    return true;
+  }
+  if (data.optional && actionsList.length > criticalSize / 2 ) {
     return true;
   }
   if (renderConfig.timePerLastFrame > (fpsMs + 0.2) && data.optional) {
@@ -195,7 +198,7 @@ var criticalSize = 1500;
 var maxSizeBeforeFlush = 300;
 var flushSize = 50;
 function getOptimalActionsCap() {
-  var optimalCap = Math.round((fpsMs*1.8)/(avgActionTime || 1) || 10);
+  var optimalCap = Math.round((fpsMs*3)/(avgActionTime || 1) || 10);
   if ( optimalCap > 1 ) {
     optimalCap--;
   }
@@ -249,7 +252,9 @@ function actionLoop(startMs) {
   if (delta < 0) {
     delta  = 5;
   }
-  performanceFeedback(feedbackDelta);
+  if (totalActions) {
+    performanceFeedback(feedbackDelta);
+  }
   requestAnimationFrame(actionLoop);
 }
 
