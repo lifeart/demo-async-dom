@@ -156,8 +156,7 @@ function actionScheduler(action) {
 function clearActions() {
   actionsList = [];
 }
-var maxSizeBeforeFlush = 100;
-var flushSize = 50;
+
 function prioritySort(a,b) {
   if (a.optional && !b.optional) {
     return 1;
@@ -175,13 +174,6 @@ function prioritySort(a,b) {
 }
 function getActionsForLoop() {
   var optimalCap = getOptimalActionsCap();
-  var maxLength = actionsList.length;
-  if (maxLength-1 < optimalCap) {
-    optimalCap = maxLength;
-  }
-  if (maxLength >= maxSizeBeforeFlush) {
-    optimalCap = flushSize;
-  }
   actionsList = actionsList.sort(prioritySort);
   var actions = actionsList.splice(0,optimalCap);
   return actions;
@@ -199,18 +191,34 @@ var avgActionTime = 0;
 function calcAvgActionTime() {
   avgActionTime = maxTime.time / maxTime.actions;
 }
-
+var criticalSize = 1500;
+var maxSizeBeforeFlush = 300;
+var flushSize = 50;
 function getOptimalActionsCap() {
-  return Math.round(fpsMs/(avgActionTime || 1) || 10);
+  var optimalCap = Math.round((fpsMs*1.8)/(avgActionTime || 1) || 10);
+  if ( optimalCap > 1 ) {
+    optimalCap--;
+  }
+  var maxLength = actionsList.length;
+  if (maxLength-1 < optimalCap) {
+    optimalCap = maxLength;
+  }
+  if (maxLength >= maxSizeBeforeFlush) {
+    optimalCap = flushSize;
+  }
+  if (maxLength>criticalSize) {
+    return criticalSize;
+  }
+  return optimalCap;
 }
-function skip(action) {
-  if (action.cb) {
-    var result = {
+function skip(action, result) {
+  if (action.cb && action.uid) {
+    var responce = result || {
       skip: true
     }
-    result.uid = action.uid;
-    log('cb', action, result);
-    sendMessage(result);
+    responce.uid = action.uid;
+    log('cb', action, responce);
+    sendMessage(responce);
   }
 }
 function actionLoop(startMs) {
@@ -218,16 +226,11 @@ function actionLoop(startMs) {
   log('actions.length',newActions.length);
   var totalActions = newActions.length;
   newActions.forEach(action=>{
-    //var ttl = performance.now();
-    performAction(action,(result)=>{
+    performAction(action, (result)=>{
       if (result.skip) {
         totalActions--;
       }
-      if (action.cb) {
-    		result.uid = action.uid;
-        log('cb', action, result);
-    		sendMessage(result);
-    	}
+      skip(action, result);
     });
   });
   var feedbackDelta = performance.now()-startMs;
