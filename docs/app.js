@@ -369,6 +369,9 @@ function setAttribute(data) {
 }
 function setStyle(data) {
 	var node = getNode(data.id);
+	if (!node) {
+		return;
+	}
 	if (data.optional && renderConfig.skipNotInVewport) {
 		if (!isInViewport(node)) {
 			log('!isInViewport',data);
