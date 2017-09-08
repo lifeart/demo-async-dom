@@ -54,6 +54,21 @@ var maxTime = {
 // avg time per frame
 var avgActionTime = 0;
 
+// viewport visiblity cache (frames)
+var viewportVisibility = 30;
+
+var boundingClientRectCache = {
+
+};
+
+var boundingClientRectCacheFrame = {
+
+};
+
+
+var frameId = 0;
+
+// viewport size calaculations
 function calcViewportSize() {
 	viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
 	viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
@@ -63,13 +78,26 @@ function isInViewport (elem) {
 	if (!elem) {
 		return false;
 	}
+  var id = elem.id;
+  if (!boundingClientRectCacheFrame[id]) {
+    boundingClientRectCacheFrame[id] = frameId;
+    boundingClientRectCache[id] = true;
+  }
+
+  if (viewportVisibility+boundingClientRectCacheFrame[id] > frameId) {
+    return boundingClientRectCache[id];
+  }
+
   var bounding = elem.getBoundingClientRect();
-  return (
+  var result = (
     bounding.top >= 0 &&
     bounding.left >= 0 &&
     bounding.bottom <= viewportHeight &&
     bounding.right <= viewportWidth
   );
+  boundingClientRectCacheFrame[id] = frameId;
+  boundingClientRectCache[id] = result;
+  return result;
 }
 // send list of messages to ww
 function sendMessages(items) {
@@ -328,21 +356,35 @@ function skip(action, result) {
   }
 }
 
+// if action can't fit in 16ms range push it back
+function pushBackAction(action) {
+  log('pushBackAction',action);
+  actionsList.unshift(action);
+}
+
 // main render thread
 function actionLoop(startMs) {
+  frameId++;
   calcViewportSize();
   var newActions = getActionsForLoop();
   log('actions.length',newActions.length);
   var totalActions = newActions.length;
-  newActions.forEach(action=>{
+  const totalActionsSize = totalActions;
+  newActions.forEach(action => {
+    if (totalActionsSize < flushSize && performance.now() - startMs > (fpsMs + 1)) {
+      totalActions--;
+      log('pushBackAction', performance.now() - startMs);
+      pushBackAction(action);
+      return;
+    }
     performAction(action, (result)=>{
       if (result.skip || (result.result && result.skip)) {
         totalActions--;
       }
-	  if (result.result && result.result.timeShift) {
-		totalActions--;
-		startMs -= result.timeShift;
-	  }
+  	  if (result.result && result.result.timeShift) {
+		    totalActions--;
+	      startMs -= result.timeShift;
+  	  }
       skip(action, result);
     });
   });
