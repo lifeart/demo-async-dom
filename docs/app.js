@@ -601,6 +601,26 @@ function customAlert(data) {
 		timeShift: performance.now()-blockStart
 	}
 }
+
+// image loading function
+function loadImage(data) {
+	var img = new Image();
+	img.onload = () => {
+		sendMessage({
+			uid: 'onload_' + data.id,
+      src: img.src,
+			naturalWidth: img.naturalWidth,
+			naturalHeight: img.naturalHeight,
+		});
+	}
+	img.onerror = () => {
+		sendMessage({
+			uid: 'onerror_' + data.id
+		});
+	}
+	img.src = data.src;
+}
+
 // addEventListener implementation
 function customAddEventListener(data) {
 	log('addEventListener',data);
@@ -612,6 +632,21 @@ function customAddEventListener(data) {
 	getNode(data.id).addEventListener(data.name, eventCallback.bind(data), false);
 	return {};
 }
+
+// DOM get node innerHTML
+function getInnerHTML(data) {
+	log('getInnerHTML', data);
+	return getNode(data.id, data).innerHTML;
+}
+
+// DOM action  el.innerHTML = el.innerHTML + html
+function appendHTML(data) {
+	log('appendHTML', data);
+  var node = getNode(data.id, data);
+	node.innerHTML = node.innerHTML + data.html;
+	return;
+}
+
 // single action evaluation logic
 function evaluateAction(data, callback) {
 
@@ -625,6 +660,8 @@ function evaluateAction(data, callback) {
 		'createNode': createNode,
 		'focus': focusEl,
 		'setHTML': setHTML,
+    'appendHTML': appendHTML,
+    'getInnerHTML': getInnerHTML,
 		'getStyleValue': getStyleValue,
 		'setTextContent': setTextContent,
 		'alert': customAlert,
@@ -635,6 +672,7 @@ function evaluateAction(data, callback) {
 		'setAttribute': setAttribute,
 		'setStyle': setStyle,
 		'removeNode': removeNode,
+    'loadImage': loadImage,
 		'getElementById': getElementById,
 		'addClass': addClass,
 		'removeClass': removeClass

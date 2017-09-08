@@ -54,6 +54,17 @@ function asyncAddEventListener(id) {
     });
 }
 
+
+function asyncImageLoad(id, src, onload, onerror) {
+    return asyncSendMessage({
+        action: 'loadImage',
+        id: id,
+    		src: src,
+    		onload: onload,
+    		onerror: onerror
+    });
+}
+
 function asyncGetElementById(id) {
     return asyncSendMessage({
         action: 'getElementById',
@@ -77,7 +88,7 @@ addMiddleware(function(data){
 	if (data.action === 'setStyle' && removedNodes.indexOf(data.id) > -1) {
 		data.selector = 'body';
 		data.id = undefined;
-	}	
+	}
 });
 
 
@@ -169,6 +180,16 @@ _this.sendMessage = function(data, callback) {
 		uids[`_${maxId}_${data.name}`] = data.callback;
 		delete data.callback;
 	}
+
+	if (typeof data.onerror === 'function') {
+		uids[`onerror_${data.id}`] = data.onerror;
+		delete data.onerror;
+	}
+	if (typeof data.onload === 'function') {
+		uids[`onload_${data.id}`] = data.onload;
+		delete data.onload;
+	}
+
 	if (data.length) {
 		data.forEach((el)=>{
 			if (typeof el.callback === 'function') {
@@ -285,7 +306,7 @@ async function _initWebApp() {
             {
                 action: 'bodyAppendChild',
                 id: id
-            }, 
+            },
 			{
 				action: 'addEventListener',
 				id: id,
@@ -303,7 +324,7 @@ async function _initWebApp() {
 						value: 'white'
 					})
 				}
-			},	
+			},
 			{
 				action: 'addEventListener',
 				id: id,
@@ -336,9 +357,9 @@ async function _initWebApp() {
 								lastStyle = style.result;
 								blacksOnTime = 0;
 							}
-							
+
 						}
-	
+
 					});
 					asyncSendMessage({
 						action: 'setStyle',
@@ -384,10 +405,10 @@ async function _initWebApp() {
 			scheduleColorUpdate(id);
 			scheduleVisibilityUpdate(id);
 		}
-        
-       
+
+
     }
-	
+
 	var score = 0;
 	function updateScore(result) {
 		if (result === 'black') {
@@ -402,7 +423,7 @@ async function _initWebApp() {
 		}
 		asyncSendMessage({id: scoreBoardId, action: 'setTextContent', textContent: `Your Score: ${score}`});
 	}
-	
+
 	var containerId = 'git-hub-container';
 	var localId = 'git-hub-link';
 	var scoreBoardId = 'score-board';
