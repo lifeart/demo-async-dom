@@ -55,17 +55,15 @@ var maxTime = {
 var avgActionTime = 0;
 
 // viewport visiblity cache (frames)
-var viewportVisibility = 30;
+var viewportVisibility = 60;
 
-var boundingClientRectCache = {
+// value cache for getBoundingClientRect;
+var boundingClientRectCache = {};
 
-};
+// var frameId cache for getBoundingClientRect
+var boundingClientRectCacheFrame = {};
 
-var boundingClientRectCacheFrame = {
-
-};
-
-
+// frame ID
 var frameId = 0;
 
 // viewport size calaculations
