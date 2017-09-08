@@ -198,6 +198,15 @@ function clearActions() {
 }
 
 function prioritySort(a,b) {
+	if (a.priority && !b.priority) {
+		return -1;
+	}	
+	if (!a.priority && b.priority) {
+		return 1;
+	}
+	if (a.priority && b.priority) {
+		return b.priority - a.priority;
+	}
   if (a.optional && !b.optional) {
     return 1;
   }

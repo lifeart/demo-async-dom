@@ -317,7 +317,7 @@ async function _initWebApp() {
 				id: id,
 				name: 'mouseenter',
 				callback: function(e) {
-					asyncSendMessage({action:'getStyleValue',style:'background-color',id:e.target}).then(style=>{
+					asyncSendMessage({action:'getStyleValue',priority:1,style:'background-color',id:e.target}).then(style=>{
 						if (style.result) {
 							if (lastStyle === 'black' && style.result === 'black') {
 								blacksOnTime++;
@@ -327,6 +327,8 @@ async function _initWebApp() {
 								}
 							} else if (lastStyle !== 'black' && style.result === 'black') {
 								blacksOnTime = 1;
+								blacksToRemove = [];
+								blacksToRemove.push(e.target);
 								lastStyle = style.result;
 								updateScore('black');
 							} else {
