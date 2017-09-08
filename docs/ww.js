@@ -257,7 +257,22 @@ function scheduleVisibilityUpdate(id) {
 
     }, colorUpdateInterval*Math.sin(Date.now()));
 }
-
+var lastStyle = 'none';
+var blacksOnTime = 0;
+var hasFullDom = false;
+var blacksToRemove = [];
+function removeBlacks() {
+	if (!hasFullDom) {
+		return;
+	}
+	asyncBatchMessages(blacksToRemove.map((id)=>{
+		return {
+			action: 'removeNode',
+			id: id
+		}
+	}));
+	blacksToRemove = [];
+}
 async function _initWebApp() {
     for (let i = 0; i < 7000; i++) {
         var id = i;
@@ -302,6 +317,27 @@ async function _initWebApp() {
 				id: id,
 				name: 'mouseenter',
 				callback: function(e) {
+					asyncSendMessage({action:'getStyleValue',style:'background-color',id:e.target}).then(style=>{
+						if (style.result) {
+							if (lastStyle === 'black' && style.result === 'black') {
+								blacksOnTime++;
+								blacksToRemove.push(e.target);
+								for (var i = 0; i < blacksOnTime; i++) {
+									updateScore('black');
+								}
+							} else if (lastStyle !== 'black' && style.result === 'black') {
+								blacksOnTime = 1;
+								lastStyle = style.result;
+								updateScore('black');
+							} else {
+								removeBlacks();
+								lastStyle = style.result;
+								blacksOnTime = 0;
+							}
+							
+						}
+	
+					});
 					asyncSendMessage({
 						action: 'setStyle',
 						id: e.target,
@@ -359,13 +395,16 @@ async function _initWebApp() {
 		} else {
 			score -= 2;
 		}
+		if (!hasFullDom) {
+			return;
+		}
 		asyncSendMessage({id: scoreBoardId, action: 'setTextContent', textContent: `Your Score: ${score}`});
 	}
 	
 	var containerId = 'git-hub-container';
 	var localId = 'git-hub-link';
 	var scoreBoardId = 'score-board';
-	var hasFullDom = false;
+
 	await asyncBatchMessages([
 		{
 			action: 'createNode',

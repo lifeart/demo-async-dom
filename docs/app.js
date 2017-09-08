@@ -336,9 +336,10 @@ function getNode(id, data) {
 	if (!nodesCache[id]) {
 		nodesCache[id] = document.getElementById(id);
 	}
+	if (!nodesCache[id] && data && data.selector) {
 		return document.querySelector(data.selector);
 	}
-	return nodesCache[id] || document.body;
+	return nodesCache[id];
 }
 
 function createNode(data) {
@@ -405,6 +406,10 @@ function removeEventListeners(data) {
 function removeNode(data) {
 	removeEventListeners(data);
 	var node = getNode(data.id);
+	if (!node) {
+		log('removeNode', data);
+		return;
+	}
 	delete nodesCache[data.id];
 	node.parentNode.removeChild(node);
 }
