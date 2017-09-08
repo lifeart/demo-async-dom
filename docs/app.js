@@ -1,34 +1,10 @@
+// "our web-worker"
 var worker =  new Worker('ww.js');
+// viewportHeight (recalculated on each frame size)
 var viewportHeight = 0;
+// viewportWidth (recalculated on each frame size)
 var viewportWidth = 0;
-
-function calcViewportSize() {
-	viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
-	viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
-}
-//https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
-var isInViewport = function (elem) {
-	if (!elem) {
-		return false;
-	}
-    var bounding = elem.getBoundingClientRect();
-    return (
-        bounding.top >= 0 &&
-        bounding.left >= 0 &&
-        bounding.bottom <= viewportHeight &&
-        bounding.right <= viewportWidth
-    );
-};
-
-function sendMessage(data) {
-  worker.postMessage(data);
-}
-(function() {
-  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-  window.requestAnimationFrame = requestAnimationFrame;
-})();
-
+// render config options
 var renderConfig = {
   disableOptional: false,
   isScrolling: undefined,
@@ -37,43 +13,110 @@ var renderConfig = {
   timePerLastFrame: 0
 };
 
+// is debug enabled
+var debug = false;
+// all nodes cache
+var nodesCache = [];
+
+// navigator object mirror
 var _navigator = {
 	userAgent: navigator.userAgent,
 	platform: navigator.platform,
 	language: navigator.language,
 };
 
+// body style node
+var pointerEventsStyleNode = document.body.style['pointer-events'];
+// imagine how many milliseconds we can take for each frame
+var fpsMs = 16;
+// here we store actions timings
+var actionTimes = {};
+// this is list of async actions
+var actionsList = [];
+// critical actions list size, if pool rich this size all actions will be applyed
+var criticalSize = 1500;
+// max size before we increase number of actions per frame
+var maxSizeBeforeFlush = 300;
+// flush packet size
+var flushSize = 50;
+// best fit pool size
+var commonPoolSize = fpsMs*2;
+// minimal loop size per action pack
+var minLoop = {
+  actions: 0,
+  time: 20
+}
+// max loop size per action pack
+var maxTime = {
+  actions: 0,
+  time: 0
+}
+// avg time per frame
+var avgActionTime = 0;
+
+function calcViewportSize() {
+	viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
+	viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
+}
+//https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
+function isInViewport (elem) {
+	if (!elem) {
+		return false;
+	}
+  var bounding = elem.getBoundingClientRect();
+  return (
+    bounding.top >= 0 &&
+    bounding.left >= 0 &&
+    bounding.bottom <= viewportHeight &&
+    bounding.right <= viewportWidth
+  );
+}
+// send list of messages to ww
+function sendMessages(items) {
+	var args = Array.prototype.slice.call(arguments);
+	args.forEach((items)=>{
+		if (Array.isArray(items)) {
+			items.forEach((item) => {
+				sendMessage(item);
+			});
+		} else {
+			sendMessage(items);
+		}
+	})
+}
+// send single message to ww
+function sendMessage(data) {
+  worker.postMessage(data);
+}
+
+worker.onmessage = (e)=>{
+  actionScheduler(e.data);
+};
+
 // Listen for scroll events
-window.addEventListener('scroll', function ( event ) {
-	
-	if (document.body.style['pointer-events'] !== 'none') {
-		document.body.style['pointer-events'] = 'none';	
+window.addEventListener('scroll', ( event ) => {
+
+	if (pointerEventsStyleNode !== 'none') {
+		pointerEventsStyleNode = 'none';
 	}
 
-    // Clear our timeout throughout the scroll
-    window.clearTimeout( renderConfig.isScrolling );
+  window.clearTimeout( renderConfig.isScrolling );
 
-    // Set a timeout to run after scrolling ends
-    renderConfig.isScrolling = setTimeout(function() {
-		document.body.style['pointer-events'] = 'auto';
-      renderConfig.isScrolling = false;
-        // Run the callback
-        //console.log( 'Scrolling has stopped.' );
-
-    }, 66);
+  renderConfig.isScrolling = setTimeout(() => {
+		pointerEventsStyleNode = 'auto';
+    renderConfig.isScrolling = false;
+  }, 66);
 
 }, false);
 
-
-sendMessage({
+// app init procedure
+sendMessages({
 	uid: '_setNavigator',
 	navigator: _navigator
-});
-sendMessage({
+},{
 	uid: 'set_modernizr_custom',
 	modernizr_custom: {}
-});
-sendMessage({
+},{
 	uid: '_setLocation',
 	location: {
 		hash: window.location.hash,
@@ -87,44 +130,43 @@ sendMessage({
 		search: window.location.search,
 		state: window.history.state,
 	}
-});
-
-sendMessage({
+},{
 	uid: '_setScreen',
 	screen: {
 		width: window.screen.width,
 		height: window.screen.height,
 	}
-});
-sendMessage({
+},{
 	uid: 'init',
 });
-window.onfocus = function() {
+
+window.onfocus = () => {
 	sendMessage({
 		uid: '_onFocus',
 	});
 }
-window.onhashchange = function() {
+window.onhashchange = () => {
 	sendMessage({
 		uid: '_onhashchange',
 	});
 }
-window.onpopstate = function() {
+window.onpopstate = () => {
 	sendMessage({
 		uid: '_onpopstate',
 	});
 }
-window.onblur = function() {
+window.onblur = () => {
 	sendMessage({
 		uid: '_onBlur'
 	});
 }
-var fpsMs = 16;
+
+// check action - should we skipt it from render?
 function shouldSkip(data) {
   if (data.action !== 'createNode' && data.id) {
-	if (!nodesCache[data.id]) {
-		return true;
-	}
+		if (!nodesCache[data.id]) {
+			return true;
+		}
   }
   if (data.length || !data.optional) {
     return false;
@@ -145,62 +187,64 @@ function shouldSkip(data) {
     return false;
   }
 }
-var actionTimes = {};
+// set time, required for one action
 function setTimePerAction(action, time) {
-  actionTimes[action] = time + 0.02;
+  if (typeof action === 'string' && time > 0) {
+    actionTimes[action] = time + 0.02;
+  }
 }
+// get time, required for one action
 function getTimePerAction(action) {
+  if (typeof action !== 'string') {
+    return 1;
+  }
   if (!actionTimes[action]) {
     actionTimes[action] = 0.5;
   }
   return actionTimes[action];
 }
+// sorting DOM actions to get maximum painting performance
 function smartBatchSort(actions) {
-
-  var priorityActionsMap = {
+  const priorityActionsMap = {
     'createNode': 1,
     'setAttribute': 2,
     'addEventListener': 3,
-	'appendChild': 4,
+		'appendChild': 4,
     'bodyAppendChild': 5,
-	'removeNode': 6
+		'removeNode': 6
   };
-
   return actions.sort((a,b)=>{
     return priorityActionsMap[a.action] - priorityActionsMap[b.action];
   });
   // priority - create, style, append
 }
+
+// do something with performance results
 function performanceFeedback(delta, actions) {
-    // var realDelta = delta / 1000;
-    // if (isNaN(realDelta)) {
-    //   return;
-    // }
-    calcAvgActionTime();
-    renderConfig.timePerLastFrame = delta;
-    renderConfig.totalActions = actions;
-		// sendMessage({
-		// 	uid: '_onPerformanceFeedback',
-		// 	delta: delta
-		// });
+  calcAvgActionTime();
+  renderConfig.timePerLastFrame = delta;
+  renderConfig.totalActions = actions;
 }
-var actionsList = [];
+
+// put resived actions to dom actions list
 function actionScheduler(action) {
   if (!shouldSkip(action)) {
     actionsList.push(action);
   } else {
     skip(action);
   }
-
 }
+
+// clear all existing actions
 function clearActions() {
   actionsList = [];
 }
 
+// get some render and evaluate priority for actions
 function prioritySort(a,b) {
 	if (a.priority && !b.priority) {
 		return -1;
-	}	
+	}
 	if (!a.priority && b.priority) {
 		return 1;
 	}
@@ -220,31 +264,25 @@ function prioritySort(a,b) {
     return 1;
   }
   return a.uid - b.uid;
-  // return 0;
 }
+
+// get actions, that should be executed at requested frame
 function getActionsForLoop() {
   var optimalCap = getOptimalActionsCap();
   actionsList = actionsList.sort(prioritySort);
   var actions = actionsList.splice(0,optimalCap);
   return actions;
 }
-var minLoop = {
-  actions: 0,
-  time: 20
-}
-var maxTime = {
-  actions: 0,
-  time: 0
-}
-var avgActionTime = 0;
 
+// avarage action time calculation
 function calcAvgActionTime() {
+  if (!maxTime.actions) {
+    return 1;
+  }
   avgActionTime = maxTime.time / maxTime.actions;
 }
-var criticalSize = 1500;
-var maxSizeBeforeFlush = 300;
-var flushSize = 50;
-var commonPoolSize = fpsMs*2;
+
+// funky logic to get optimal actions count for current frame
 function getOptimalActionsCap() {
 
   var optimalCandidate = Math.round(fpsMs / (renderConfig.timePerLastFrame/renderConfig.totalActions));
@@ -277,6 +315,8 @@ function getOptimalActionsCap() {
   }
   return optimalCap;
 }
+
+// return an callback for finished action
 function skip(action, result) {
   if (action.cb && action.uid) {
     var responce = result || {
@@ -287,6 +327,8 @@ function skip(action, result) {
     sendMessage(responce);
   }
 }
+
+// main render thread
 function actionLoop(startMs) {
   calcViewportSize();
   var newActions = getActionsForLoop();
@@ -299,7 +341,7 @@ function actionLoop(startMs) {
       }
 	  if (result.result && result.result.timeShift) {
 		totalActions--;
-		startMs -= result.timeShift; 
+		startMs -= result.timeShift;
 	  }
       skip(action, result);
     });
@@ -326,12 +368,7 @@ function actionLoop(startMs) {
   requestAnimationFrame(actionLoop);
 }
 
-worker.onmessage = (e)=>{
-  actionScheduler(e.data);
-}
-
-var debug = false;
-
+// simple logging function
 function log() {
   if (!debug) {
     return;
@@ -339,8 +376,7 @@ function log() {
   console.log.apply(this,Array.prototype.slice.call(arguments));
 }
 
-var nodesCache = [];
-
+// node cache
 function getNode(id, data) {
 	if (!nodesCache[id]) {
 		nodesCache[id] = document.getElementById(id);
@@ -351,6 +387,7 @@ function getNode(id, data) {
 	return nodesCache[id];
 }
 
+// DOM action createElement
 function createNode(data) {
 	var node = document.createElement(data.tag);
 	node.id = data.id
@@ -362,29 +399,36 @@ function createNode(data) {
 	}
 	if (data.target) {
 		node.target = data.target;
-	}	
+	}
 	if (data.title) {
 		node.title = data.title;
 	}
 	nodesCache[data.id] = node;
 }
 
+// DOM action appendChild
 function appendChild(data) {
 	var parent = getNode(data.id);
 	var children = getNode(data.childrenId);
 	parent.appendChild(children);
 }
 
+// DOM action el.innerHTML
 function setHTML(data) {
 	return getNode(data.id).innerHTML = data.html;
 }
+
+// DOM action setTextContent
 function setTextContent(data) {
 	return getNode(data.id).textContent = data.textContent;
 }
 
+// DOM action setAttribute
 function setAttribute(data) {
 	return getNode(data.id).setAttribute(data.attribute,data.value);
 }
+
+// DOM action setStyle
 function setStyle(data) {
 	var node = getNode(data.id, data);
 	if (!node) {
@@ -397,21 +441,21 @@ function setStyle(data) {
 				skip:true
 			};
 		}
-		
+
 	}
 	return node.style[data.attribute] = data.value;
 }
+// DOM action appendChild to head node
 function headAppendChild(data) {
 	var node = getNode(data.id);
 	node && document.head.appendChild(node);
 }
+// DOM action appendChild to body node
 function bodyAppendChild(data) {
 	var node = getNode(data.id);
 	node && document.body.appendChild(node);
 }
-function removeEventListeners(data) {
-	
-}
+// DOM action removeChild
 function removeNode(data) {
 	removeEventListeners(data);
 	var node = getNode(data.id);
@@ -422,13 +466,15 @@ function removeNode(data) {
 	delete nodesCache[data.id];
 	node.parentNode.removeChild(node);
 }
+// DOM action classList.remove
 function removeClass(data) {
 	return getNode(data.id).classList.remove(data.class);
 }
-
+// DOM action getElementById
 function getElementById(data) {
 	return getNodeData(data);
 }
+// DOM action getElementById
 function getNodeData(data) {
 	var node = getNode(data.id);
 	if (!node) {
@@ -444,9 +490,13 @@ function getNodeData(data) {
 		innerWidth: node.innerWidth,
 		innerHeight: node.innerHeight,
 		scrollY: node.scrollY
-	}
+	};
 }
+// event-listeners remover
+function removeEventListeners(data) {
 
+}
+// focus element
 function focusEl(data) {
 	if (data.id) {
 		getNode(data.id).focus();
@@ -454,13 +504,15 @@ function focusEl(data) {
 		window.focus();
 	}
 }
-
+// DOM action classList.add
 function addClass(data) {
 	return getNode(data.id).classList.add(data.class);
 }
+// DOM action getStyleValue
 function getStyleValue(data) {
 	return getNode(data.id).style[data.style];
 }
+// Event to Object transormation (to pass it to ww)
 function eventToObject(e) {
 	return {
 		altKey: e.altKey,
@@ -501,6 +553,7 @@ function eventToObject(e) {
 		y: e.y
 	};
 }
+// Alert implementation
 function customAlert(data) {
 	var blockStart = performance.now();
 	alert(data.text);
@@ -508,6 +561,7 @@ function customAlert(data) {
 		timeShift: performance.now()-blockStart
 	}
 }
+// addEventListener implementation
 function customAddEventListener(data) {
 	log('addEventListener',data);
 	var eventCallback = function(domEvent) {
@@ -518,6 +572,7 @@ function customAddEventListener(data) {
 	getNode(data.id).addEventListener(data.name, eventCallback.bind(data), false);
 	return {};
 }
+// single action evaluation logic
 function evaluateAction(data, callback) {
 
   if (shouldSkip(data)) {
@@ -554,6 +609,7 @@ function evaluateAction(data, callback) {
     log('no-action',data);
 	}
 }
+// action pack handle logic
 function performAction(data,callback) {
 
 	var result = [];
@@ -571,4 +627,5 @@ function performAction(data,callback) {
 	}
 
 }
+// start the world
 requestAnimationFrame(actionLoop);
