@@ -216,7 +216,19 @@ class Element {
     this.style = new Proxy(this._style, styleProxy);
     this.clientWidth = 1280;
     this.clientHeight = 800;
+
+
+    this.scrollWidth = 0;
     this.scrollHeight = 0;
+    this.offsetWidth = 0;
+    this.offsetHeight = 0;
+    this.innerWidth = 0;
+    this.innerHeight = 0;
+    this.scrollTop = 0;
+    this.scrollLeft = 0;
+    this.scrollY = 0;
+
+
     this.nodeName = String(nodeName).toUpperCase();
     this.tagName = this.nodeName;
     this.type = 'node';
