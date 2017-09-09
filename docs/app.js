@@ -508,6 +508,9 @@ function removeNode(data) {
 function removeClass(data) {
 	return getNode(data.id).classList.remove(data.class);
 }
+function setClassName(data) {
+	return getNode(data.id).сlassName =  data.name;
+}
 // DOM action getElementById
 function getElementById(data) {
 	return getNodeData(data);
@@ -668,6 +671,7 @@ function evaluateAction(data, callback) {
 		'bodyAppendChild': bodyAppendChild,
 		'appendChild': appendChild,
 		'setAttribute': setAttribute,
+		'setClassName': setClassName,
 		'setStyle': setStyle,
 		'removeNode': removeNode,
     'loadImage': loadImage,
