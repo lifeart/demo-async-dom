@@ -447,8 +447,8 @@ function createNode(data) {
 }
 
 // DOM action appendChild
-function appendChild(data) {
-	var parent = getNode(data.id);
+function appendChild(data, parent) {
+	parent = parent || getNode(data.id);
 	var children = getNode(data.childrenId);
 	parent.appendChild(children);
 }
@@ -487,13 +487,11 @@ function setStyle(data) {
 }
 // DOM action appendChild to head node
 function headAppendChild(data) {
-	var node = getNode(data.id);
-	node && document.head.appendChild(node);
+  appendChild(data, document.head);
 }
 // DOM action appendChild to body node
 function bodyAppendChild(data) {
-	var node = getNode(data.id);
-	node && document.body.appendChild(node);
+  appendChild(data, document.body);
 }
 // DOM action removeChild
 function removeNode(data) {
