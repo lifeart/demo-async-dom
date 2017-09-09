@@ -1,5 +1,18 @@
 var imageId = 0;
 
+function EventAdapter(callback) {
+  return function(e) {
+    e.currentTarget = document._ids[e.currentTarget];
+    e.srcElement = document._ids[e.srcElement];
+    e.target = document._ids[e.target];
+    e.toElement = document._ids[e.toElement];
+    e.eventPhase = document._ids[e.eventPhase];
+    e.preventDefault = ()=>{};
+    callback(e);
+  }
+}
+
+
 class Image {
   set src(value) {
     this._src = value;
@@ -263,17 +276,11 @@ class Element {
     this._syncDom();
   }
   addEventListener(name, callback) {
-    console.log('addEventListener',name,this);
-    asyncSendMessage({action:'addEventListener',id:this.id,name:name,callback:(e)=>{
-      // console.log('eee',e);
-      e.currentTarget = this._root._ids[e.currentTarget];
-      e.srcElement = this._root._ids[e.srcElement];
-      e.target = this._root._ids[e.target];
-      e.toElement = this._root._ids[e.toElement];
-      e.eventPhase = this._root._ids[e.eventPhase];
-      e.preventDefault = ()=>{};
-      callback(e);
-    }});
+    // console.log('addEventListener',name,this);
+    if (!name) {
+      return;
+    }
+    asyncSendMessage({action:'addEventListener',id:this.id,name:name,callback:EventAdapter(callback)});
   }
   appendChild(children) {
     if (children.type === 'fragment') {
@@ -443,7 +450,7 @@ window.addEventListener = function(name, callback) {
   if (name === 'load') {
     setTimeout(callback, 200);
   }
-  asyncSendMessage({action:'addEventListener',id:'window',name:name,callback:callback});
+  asyncSendMessage({action:'addEventListener',id:'window',name:name,callback:EventAdapter(callback)});
 }
 
 window.document = document;
