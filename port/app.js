@@ -625,6 +625,7 @@ function getStyleValue(data) {
 }
 // Event to Object transormation (to pass it to ww)
 function eventToObject(e) {
+  e.preventDefault();
 	return {
 		altKey: e.altKey,
 		bubbles: e.bubbles,
@@ -737,6 +738,10 @@ function scrollTo() {
   window.scrollTo(0,0);
 }
 
+function customPushState(data) {
+  //data.url
+  window.history.pushState(data.state, data.title);
+}
 // single action evaluation logic
 function evaluateAction(data, callback) {
   // console.log('evaluateAction',data);
@@ -753,6 +758,7 @@ function evaluateAction(data, callback) {
 		'appendHTML': appendHTML,
 		'getInnerHTML': getInnerHTML,
 		'getStyleValue': getStyleValue,
+		'pushState': customPushState,
 		'setTextContent': setTextContent,
 		'styleSheetAddRule': styleSheetAddRule,
 		'alert': customAlert,

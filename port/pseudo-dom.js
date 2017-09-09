@@ -263,8 +263,17 @@ class Element {
     this._syncDom();
   }
   addEventListener(name, callback) {
-    // console.log('addEventListener',arguments,this);
-    asyncSendMessage({action:'addEventListener',id:this.id,name:name,callback:callback});
+    console.log('addEventListener',name,this);
+    asyncSendMessage({action:'addEventListener',id:this.id,name:name,callback:(e)=>{
+      // console.log('eee',e);
+      e.currentTarget = this._root._ids[e.currentTarget];
+      e.srcElement = this._root._ids[e.srcElement];
+      e.target = this._root._ids[e.target];
+      e.toElement = this._root._ids[e.toElement];
+      e.eventPhase = this._root._ids[e.eventPhase];
+      e.preventDefault = ()=>{};
+      callback(e);
+    }});
   }
   appendChild(children) {
     if (children.type === 'fragment') {
@@ -417,7 +426,8 @@ function getComputedStyle() {
 var document = new Proxy(new Document(),windowProxy);
 window.history = {};
 window.history.state = [];
-window.history.pushState = function() {
+window.history.pushState = function(state, title, url) {
+  asyncSendMessage({action:'pushState',id:Date.now(),state:state,title:title,url:url});
   console.log('pushState',arguments);
 }
 window.screen = {
