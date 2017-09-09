@@ -102,6 +102,7 @@ class Element {
     return '';
   }
   getComputedStyle() {
+    console.log('getComputedStyle',this.style);
     return this.style;
   }
   setParentNode(parent) {
@@ -180,7 +181,12 @@ class Element {
       this.offsetHeight = node.offsetHeight;
       this.innerWidth = node.innerWidth;
       this.innerHeight = node.innerHeight;
+      this.scrollTop = node.scrollTop;
+      this.scrollLeft = node.scrollLeft;
       this.scrollY = node.scrollY;
+      for (var el in node.style) {
+        this._style[el] = node.style[el];
+      }
     });
   }
   get childNodes() {
@@ -284,11 +290,15 @@ var styleProxy = {
     if (isNaN(value)) {
       return true;
     }
-    asyncSendMessage({action:'setStyle',id:target.node.id,attribute:prop,value:value});
+    var val = value;
+    // if (prop === 'opacity') {
+      // val = 1;
+    // }
+    asyncSendMessage({action:'setStyle',id:target.node.id,attribute:prop,value:val});
     // console.log('target.id',target);
     target.node._syncDom();
     // console.log('setStyle',target, prop, value);
-    target[prop] = value;
+    target[prop] = val;
     return true;
   }
 }
@@ -388,6 +398,10 @@ window.localStorage = {
 		_localStorage[key];
 	},
 };
+
+function getComputedStyle() {
+  console.log('getComputedStyle');
+}
 var document = new Proxy(new Document(),windowProxy);
 window.history = {};
 window.history.state = [];
@@ -415,7 +429,7 @@ window.document = document;
 function requestAnimationFrame(callback) {
 			setTimeout(function(){
 				callback(performance.now());
-			},60);
+			},17);
 }
 
 function _initWebApp() {

@@ -569,6 +569,15 @@ function removeNode(data) {
 function removeClass(data) {
 	return getNode(data.id).classList.remove(data.class);
 }
+
+function styleToObject(styleNode) {
+  var obj = {};
+  for (var i = 0; i < styleNode.length; i++) {
+      obj[styleNode[i]] = styleNode.getPropertyValue(styleNode[i]);
+  }
+  return obj;
+}
+
 // DOM action getElementById
 function customGetElementById(data) {
 	return getNodeData(data);
@@ -586,6 +595,9 @@ function getNodeData(data) {
 		scrollHeight: node.scrollHeight,
 		offsetWidth: node.offsetWidth,
 		offsetHeight: node.offsetHeight,
+		scrollTop: node.scrollTop,
+		scrollLeft: node.scrollLeft,
+    style: styleToObject(node.style),
 		innerWidth: node.innerWidth,
 		innerHeight: node.innerHeight,
 		scrollY: node.scrollY
