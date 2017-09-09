@@ -41,11 +41,16 @@ class Element {
 
     if (value.indexOf('>')==-1) {
       this.textContent = value;
+      asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent}).then(()=>{
+          this._syncDom();
+      });
+
+      return;
       // return;
     }
 
     if (value.indexOf('<style>')>-1) {
-      this.appendChild(this._root.createElement('style'));
+      // this.appendChild(this._root.createElement('style'));
       // return;
     }
 
@@ -57,7 +62,10 @@ class Element {
     // if (!nodes.childNodes.length) {
       this.textContent =value;
         // console.log('textContent',this.textContent);
-        asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
+        asyncSendMessage({action:'setHTML',id:this.id,html:this.textContent}).then(()=>{
+            this._syncDom();
+        });
+        // asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
         this._syncDom();
     // }
     // nodes.childNodes.forEach(node=>{
@@ -67,10 +75,17 @@ class Element {
       // }
     // });
   }
+  select() {
+    console.log('select',arguments);
+  }
+  blur() {
+    console.log('blur',arguments);
+  }
   get className() {
     return this._classes.join(' ');
   }
   set className(value) {
+    // console.log('setclassName',value,this.id ,this.tagName);
     asyncSendMessage({action:'setClassName',id:this.id,name:value});
     return this._classes = value.split(' ');
   }
@@ -202,8 +217,10 @@ class Element {
 
 
     this.styleSheet = {
-      addRule() {
+      addRule(selector,rule) {
 
+          asyncSendMessage({action:'styleSheetAddRule',id:_this.id,selector:selector,rule:rule});
+          // console.log('addRule',_this,arguments);
       }
     }
 

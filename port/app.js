@@ -441,6 +441,7 @@ function createNode(data) {
 
   // console.log('createNode '+data.id,data);
 
+
   if (getNode(data.id)) {
     // console.log('node exists', data.id);
     return;
@@ -456,6 +457,9 @@ function createNode(data) {
   }
 
 	var node = document.createElement(data.tag);
+  if (data.tag.toLowerCase() === 'canvas') {
+    node.style.display = 'none';
+  }
 	node.id = data.id
 	if (data.href) {
 		node.href = data.href;
@@ -690,13 +694,31 @@ function loadImage(data) {
   }
 	img.src = data.src;
 }
+
+function styleSheetAddRule(data) {
+  var node = getNode(data.id,data);
+  var name = data.selector;
+  var rules =  data.rule;
+
+  if(! (node.sheet || {}).insertRule) {
+		var sheet = (node.styleSheet || node.sheet)
+		sheet.addRule(name, rules)
+	} else {
+		var sheet = node.sheet;
+		sheet.insertRule(name + '{' + rules + '}', sheet.cssRules.length);
+	}
+
+  // node.styleSheet.addRule(data.selector,data.rule);
+}
+
 function setClassName(data) {
-  // console.log('setClassName',data);
+
 	var node = getNode(data.id,data);
   if (!node) {
     return;
   }
-  node.сlassName =  data.name;
+
+  node.className =  data.name;
 }
 
 function scrollTo() {
@@ -720,6 +742,7 @@ function evaluateAction(data, callback) {
 		'getInnerHTML': getInnerHTML,
 		'getStyleValue': getStyleValue,
 		'setTextContent': setTextContent,
+		'styleSheetAddRule': styleSheetAddRule,
 		'alert': customAlert,
 		'scrollTo': scrollTo,
 		'addEventListener': customAddEventListener,
