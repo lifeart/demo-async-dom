@@ -54,9 +54,8 @@ class Element {
 
     if (value.indexOf('>')==-1) {
       this.textContent = value;
-      asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent}).then(()=>{
-          this._syncDom();
-      });
+      asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
+      this._syncDom();
 
       return;
       // return;
@@ -75,9 +74,7 @@ class Element {
     // if (!nodes.childNodes.length) {
       this.textContent =value;
         // console.log('textContent',this.textContent);
-        asyncSendMessage({action:'setHTML',id:this.id,html:this.textContent}).then(()=>{
-            this._syncDom();
-        });
+        asyncSendMessage({action:'setHTML',id:this.id,html:this.textContent});
         // asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
         this._syncDom();
     // }
@@ -100,6 +97,7 @@ class Element {
   set className(value) {
     // console.log('setclassName',value,this.id ,this.tagName);
     asyncSendMessage({action:'setClassName',id:this.id,name:value});
+    this._syncDom();
     return this._classes = value.split(' ');
   }
   get innerHTML() {
@@ -179,13 +177,16 @@ class Element {
       this._id = value;
     }
     this._attributes[key] = value;
-    asyncSendMessage({action:'setAttribute',id:this.id,attribute:key,value:value}).then(()=>{
-      this._syncDom();
-    })
+    asyncSendMessage({action:'setAttribute',id:this.id,attribute:key,value:value});
+    this._syncDom();
   }
   _syncDom() {
     asyncSendMessage({action:'getElementById',id:this.id}).then(result=>{
       var node = result.result;
+      if (!result.result.style) {
+        return;
+      }
+      // console.log(result.result);
       this.clientWidth = node.clientWidth;
       this.clientHeight = node.clientHeight;
       this.scrollWidth = node.scrollWidth;
@@ -198,6 +199,7 @@ class Element {
       this.scrollLeft = node.scrollLeft;
       this.scrollY = node.scrollY;
       for (var el in node.style) {
+        // console.log(el,'"'+node.style[el]+'"');
         this._style[el] = node.style[el];
       }
     });
@@ -270,10 +272,18 @@ class Element {
     return this;
   }
   _appendChild(element) {
+    // console.log('append');
     element.setParentNode(this);
     asyncSendMessage({action:'appendChild',id:this.id,childrenId:element.id});
-    this.children.push(element);
     this._syncDom();
+    this.children.push(element);
+  }
+  removeEventListener(name, callback) {
+    if (!name) {
+      return;
+    }
+    // asyncSendMessage({action:'addEventListener',id:this.id,name:name,callback:callback)});
+    console.log('removeEventListener',arguments);
   }
   addEventListener(name, callback) {
     // console.log('addEventListener',name,this);
@@ -323,8 +333,9 @@ var styleProxy = {
       // val = 1;
     // }
     asyncSendMessage({action:'setStyle',id:target.node.id,attribute:prop,value:val});
-    // console.log('target.id',target);
     target.node._syncDom();
+    // console.log('target.id',target);
+
     // console.log('setStyle',target, prop, value);
     target[prop] = val;
     return true;
@@ -456,11 +467,8 @@ window.addEventListener = function(name, callback) {
 window.document = document;
 
 function requestAnimationFrame(callback) {
-			setTimeout(function(){
-				callback(performance.now());
-			},17);
-}
-
-function _initWebApp() {
-	console.log('_initWebApp');
+  console.log('requestAnimationFrame');
+	setTimeout(function(){
+		callback(performance.now());
+	},100);
 }

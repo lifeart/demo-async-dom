@@ -18,4 +18,5 @@ self.setTimeout = function(cb,time) {
   },time);
 };
 
+// self.importScripts('qml.app.js');
 self.importScripts('http://pureqml.com/qml.index.min.js');
