@@ -1,3 +1,20 @@
+var navigator = {
+  userAgent: 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
+}
+
+var KEBAB_REGEX = /[A-Z\u00C0-\u00D6\u00D8-\u00DE]/g;
+var REVERSE_REGEX = /-[a-z\u00E0-\u00F6\u00F8-\u00FE]/g;
+var kebabCache = {};
+function kebabCase(str) {
+  if (!kebabCache[str]) {
+    kebabCache[str] = str.replace(KEBAB_REGEX, function (match) {
+  		return '-' + match.toLowerCase();
+  	});
+  }
+	return kebabCache[str];
+};
+
+
 var imageId = 0;
 
 function EventAdapter(callback) {
@@ -202,6 +219,7 @@ class Element {
         // console.log(el,'"'+node.style[el]+'"');
         this._style[el] = node.style[el];
       }
+
     });
   }
   get childNodes() {
@@ -321,10 +339,28 @@ class TextNode {
 
 var styleProxy = {
   get(target, prop) {
-    // console.log('getStyle',target, prop);
-    return target[prop];
+    // console.log('getStyle',target, prop,kebabCase(prop));
+    return target[kebabCase(prop)] || '';
   },
   set(target, prop, value) {
+    var kebabProp = kebabCase(prop);
+    if (kebabProp === 'css-text') {
+
+      value.split(';').forEach(e=>{
+        const [key,v] = e.split(':');
+        if (key && typeof v !== 'undefined') {
+          // console.log(key,v);
+            target[key.trim()] = v.trim();
+        }
+      });
+      target.node.setAttribute('style',value);
+      console.log(target);
+      return true;
+    }
+    // if (String(value).indexOf(';')>-1) {
+    //     console.log('setStyle',target, prop,kebabCase(prop),value);
+    // }
+
     if (isNaN(value)) {
       return true;
     }
@@ -332,19 +368,22 @@ var styleProxy = {
     // if (prop === 'opacity') {
       // val = 1;
     // }
-    asyncSendMessage({action:'setStyle',id:target.node.id,attribute:prop,value:val});
+    asyncSendMessage({action:'setStyle',id:target.node.id,attribute:kebabProp,value:val});
     target.node._syncDom();
     // console.log('target.id',target);
 
     // console.log('setStyle',target, prop, value);
-    target[prop] = val;
+    target[kebabProp] = val;
     return true;
   }
 }
 
 var windowProxy = {
   get(target, prop) {
-    // console.log('get',target, prop);
+    // if (target.tagName) {
+          // console.log('get',target, prop);
+    // }
+
     return target[prop];
   },
   set(target, prop, value) {
@@ -356,6 +395,9 @@ var windowProxy = {
 
 class Document {
   _syncDom(id) {
+    if (!id) {
+      return;
+    }
     this._ids[id]._syncDom();
   }
   getElementsByTagName(tagName) {
@@ -466,9 +508,14 @@ window.addEventListener = function(name, callback) {
 
 window.document = document;
 
+function cancelAnimationFrame(id) {
+  clearTimeot(id);
+}
+
 function requestAnimationFrame(callback) {
   console.log('requestAnimationFrame');
-	setTimeout(function(){
+	var id = setTimeout(function(){
 		callback(performance.now());
 	},100);
+  return id;
 }
