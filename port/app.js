@@ -112,6 +112,7 @@ function sendMessages(items) {
 }
 // send single message to ww
 function sendMessage(data) {
+  log('sendMessage',data);
   worker.postMessage(data);
 }
 
@@ -389,6 +390,7 @@ function actionLoop(startMs) {
 		    totalActions--;
 	      startMs -= result.timeShift;
   	  }
+      // console.log('skip',action,result);
       skip(action, result);
     });
   });
@@ -744,7 +746,7 @@ function customPushState(data) {
 }
 // single action evaluation logic
 function evaluateAction(data, callback) {
-  // console.log('evaluateAction',data);
+  log('evaluateAction',data);
   if (shouldSkip(data)) {
     log('skip',data);
     return callback({skip:true});

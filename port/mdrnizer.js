@@ -760,6 +760,7 @@
 
 })(window, document);
 window.Modernizr.prefixed = function(value,target) {
+  // console.log('prefixed');
   return target[value];
 }
 window.Modernizr.prefixedCSS = function(value,target) {

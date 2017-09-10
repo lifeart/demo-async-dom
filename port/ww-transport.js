@@ -3,12 +3,18 @@ var middlewareActions = [];
 var maxId = 0;
 var mid = 0;
 
+
+function _initWebApp() {
+	console.log('_initWebApp');
+}
+
+
 _this.sendMessage = function(data, callback) {
     maxId++;
     mid++;
     data.uid = maxId;
     if (callback) {
-        uids[maxId] = callback
+        uids[maxId] = callback;
     }
 	if (typeof data.callback === 'function') {
 		uids[`_${maxId}_${data.name}`] = data.callback;
@@ -37,17 +43,18 @@ _this.sendMessage = function(data, callback) {
     _this.postMessage(data);
 }
 
-_this.onmessage = function(e) {
-    uids[e.data.uid] && uids[e.data.uid](e.data);
-    if (String(e.data.uid).charAt(0) !== '_') {
-        delete uids[e.data.uid];
+self.onmessage = function(e) {
+    var uid = String(e.data.uid);
+    uids[uid] && uids[uid](e.data);
+    if (String(uid).charAt(0) !== '_') {
+        delete uids[uid];
     }
 };
 
 
 var actionsList = [];
 var batchCallbacks = [];
-
+var WAITING_LIST = [];
 //document.createElement = new Proxy(document.createElement.bind(document), documentProxy);
 // document.body = new Proxy(document.body.bind(document), documentProxy);
 
@@ -58,12 +65,16 @@ function addMiddleware(action) {
 	middlewareActions.push(action);
 }
 function asyncSendMessage(data) {
-	middleware(data);
-    return new Promise(function(resolve, reject) {
+	  middleware(data);
+    var request = new Promise(function(resolve, reject) {
         _this.sendMessage(data, function(result) {
             resolve(result);
         });
     });
+    if (data.action === 'getElementById') {
+      WAITING_LIST.push(request);
+    }
+    return request;
 }
 
 function asyncSetAttribute(id, name, value) {
