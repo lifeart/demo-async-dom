@@ -71,8 +71,37 @@ function asyncSendMessage(data) {
             resolve(result);
         });
     });
-    if (data.action === 'getElementById') {
+
+    var waitingStates = [
+      'createNode',
+  		'setHTML',
+  		'appendHTML',
+  		'getInnerHTML',
+  		'getStyleValue',
+  		'pushState',
+  		'setTextContent',
+  		'styleSheetAddRule',
+  		'headAppendChild',
+  		'bodyAppendChild',
+  		'appendChild',
+  		'setAttribute',
+  		'setStyle',
+  		'removeNode',
+  		'loadImage',
+      'setClassName',
+  		'getElementById',
+  		'addClass',
+  		'removeClass'
+    ];
+
+
+
+    if (waitingStates.indexOf(data.action>-1)) {
       WAITING_LIST.push(request);
+    } else {
+      if (data.onload) {
+        WAITING_LIST.push(request);
+      }
     }
     return request;
 }

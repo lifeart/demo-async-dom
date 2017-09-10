@@ -8,6 +8,7 @@ self.importScripts('mdrnizer.js');
 
 
 var _setTimeout = self.setTimeout;
+var _setInterval = self.setInterval;
 
 self.setTimeout = function(cb,time) {
   return _setTimeout(()=>{
@@ -17,6 +18,15 @@ self.setTimeout = function(cb,time) {
     });
   },time);
 };
+// self.setInterval = function(cb,time) {
+//   console.log('setInterval');
+//   return _setInterval(()=>{
+//     Promise.all(WAITING_LIST).then(()=>{
+//       WAITING_LIST = [];
+//       cb();
+//     });
+//   },time);
+// };
 
 // self.importScripts('qml.app.js');
 self.importScripts('http://pureqml.com/qml.index.min.js');
