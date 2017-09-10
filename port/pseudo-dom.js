@@ -225,14 +225,46 @@ class Element {
     if (key === 'id') {
       this._id = value;
     }
+    if (key === 'style') {
+      value.split(';').forEach(e=>{
+        let [key,v] = e.split(':');
+        if (key && typeof v !== 'undefined') {
+          if (key === 'background-color') {
+            v = hexToRgba(v);
+          }
+          this._style[key.trim()] = v.trim();
+        }
+      });
+    }
     this._attributes[key] = value;
     asyncSendMessage({action:'setAttribute',id:this.id,attribute:key,value:value});
     this._syncDom();
   }
   _syncDom() {
+    if (!this.offsetHeight) {
+        const offHeight = parseInt(this._style.height, 10);
+        // console.log(this._style.height);
+        if (isNaN(offHeight)) {
+          this.offsetHeight = 15;
+        } else {
+          this.offsetHeight = offHeight;
+        }
+    }
+    if (!this.offsetWidth) {
+      const offWidth = parseInt(this._style.width, 10);
+      if (isNaN(offWidth)) {
+        this.offsetWidth = 16;
+      } else {
+        this.offsetWidth = offWidth;
+      }
+      // console.log('offWidth',offWidth);
+      // console.log('ewe',this._style.width);
+      // this.offsetWidth = this.style.width;
+    }
     asyncSendMessage({action:'getElementById',id:this.id}).then(result=>{
       var node = result.result;
       if (!result.result.style) {
+        console.log(result.result);
         return;
       }
       // console.log(result.result);
@@ -379,7 +411,7 @@ var styleProxy = {
     if (kebabProp === 'css-text') {
 
       value.split(';').forEach(e=>{
-        const [key,v] = e.split(':');
+        let [key,v] = e.split(':');
         if (key && typeof v !== 'undefined') {
           if (key === 'background-color') {
             // console.log(v);
@@ -415,11 +447,12 @@ var styleProxy = {
       // val = 1;
     // }
     asyncSendMessage({action:'setStyle',id:target.node.id,attribute:kebabProp,value:val});
-    target.node._syncDom();
+
     // console.log('target.id',target);
 
     // console.log('setStyle',target, prop, value);
     target[kebabProp] = val;
+    target.node._syncDom();
     return true;
   }
 }

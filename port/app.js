@@ -591,18 +591,18 @@ function getNodeData(data) {
 		return {};
 	}
 	return {
-		clientWidth: node.clientWidth,
-		clientHeight: node.clientHeight,
-		scrollWidth: node.scrollWidth,
-		scrollHeight: node.scrollHeight,
-		offsetWidth: node.offsetWidth,
-		offsetHeight: node.offsetHeight,
-		scrollTop: node.scrollTop,
-		scrollLeft: node.scrollLeft,
+		clientWidth: node.clientWidth || 0,
+		clientHeight: node.clientHeight || 0,
+		scrollWidth: node.scrollWidth || 0,
+		scrollHeight: node.scrollHeight || 0,
+		offsetWidth: node.offsetWidth || 0,
+		offsetHeight: node.offsetHeight || 0,
+		scrollTop: node.scrollTop || 0,
+		scrollLeft: node.scrollLeft || 0,
     style: styleToObject(node.style),
-		innerWidth: node.innerWidth,
-		innerHeight: node.innerHeight,
-		scrollY: node.scrollY
+		innerWidth: node.innerWidth || 0,
+		innerHeight: node.innerHeight || 0,
+		scrollY: node.scrollY || 0
 	};
 }
 // event-listeners remover
