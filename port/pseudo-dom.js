@@ -1,3 +1,35 @@
+const hexToRgba = function(hex, a) {
+  if (hex.charAt(0) !== '#') {
+    return hex;
+  }
+  const fixHex = (hex) => {
+    let newHex = hex.startsWith('#') ? hex.slice(1) : hex;
+
+    if (newHex.length === 3) {
+      newHex = `${newHex.slice(0, 1)}${newHex.slice(0, 1)}${newHex.slice(1, 2)}${newHex.slice(1, 2)}${newHex.slice(2, 3)}${newHex.slice(2, 3)}`;
+    }
+
+
+    return newHex;
+  };
+
+  const newHex = fixHex(hex);
+  const r = parseInt(newHex.substring(0, 2), 16);
+  const g = parseInt(newHex.substring(2, 4), 16);
+  const b = parseInt(newHex.substring(4, 6), 16);
+
+  let o;
+  if (newHex.length === 8) {
+    o = +((parseInt(newHex.substring(6, 8), 16)/255).toFixed(2));
+  }
+  o = isNumeric(a) ? a : o;
+
+  return isNumeric(o) ? `rgba(${r}, ${g}, ${b}, ${o})` : `rgb(${r}, ${g}, ${b})`;
+};
+
+const isNumeric = n => !isNaN(parseFloat(n)) && isFinite(n);
+
+
 var navigator = {
   userAgent: 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
 }
@@ -349,6 +381,10 @@ var styleProxy = {
       value.split(';').forEach(e=>{
         const [key,v] = e.split(':');
         if (key && typeof v !== 'undefined') {
+          if (key === 'background-color') {
+            // console.log(v);
+            v = hexToRgba(v);
+          }
           // console.log(key,v);
             target[key.trim()] = v.trim();
         }
@@ -357,14 +393,24 @@ var styleProxy = {
       console.log(target);
       return true;
     }
+
+    var val = value;
+
+    if (kebabProp === 'background-color') {
+
+      val = hexToRgba(val);
+      console.log(val);
+
+    }
+
     // if (String(value).indexOf(';')>-1) {
     //     console.log('setStyle',target, prop,kebabCase(prop),value);
     // }
 
-    if (isNaN(value)) {
+    if (isNaN(val)) {
       return true;
     }
-    var val = value;
+
     // if (prop === 'opacity') {
       // val = 1;
     // }
