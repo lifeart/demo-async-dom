@@ -92,7 +92,18 @@ class Image {
 
 
 class Element {
+  insertAdjacentHTML(position, html) {
+    if (position === 'beforeEnd') {
+
+    } else if (position === 'beforeBegin') {
+
+    }
+    return null;
+  }
   set innerHTML(value) {
+
+
+
     this._removeChildren();
 
     this._innerHTML = value;
@@ -121,11 +132,19 @@ class Element {
     // console.log('textContent',nodes);
     // return;
     // if (!nodes.childNodes.length) {
+
+    // Ember.js hook
+    if (value === '<textarea>x</textarea>') {
+      this.appendChild(this._root.createElement('textarea')).defaultValue = 'x';
+    } else {
       this.textContent =value;
         // console.log('textContent',this.textContent);
         asyncSendMessage({action:'setHTML',id:this.id,html:this.textContent});
         // asyncSendMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
         this._syncDom();
+    }
+
+
     // }
     // nodes.childNodes.forEach(node=>{
       // console.log('uppend',node);
@@ -158,8 +177,18 @@ class Element {
   get type() {
     return this._type;
   }
+  get nodeType() {
+    return 3;
+  }
   serialize() {
     return '';
+  }
+  get ownerDocument() {
+    return this._root;
+  }
+  compareDocumentPosition(node) {
+    console.log('compareDocumentPosition', node);
+    return 1;
   }
   getComputedStyle() {
     console.log('getComputedStyle',this.style);
@@ -167,6 +196,18 @@ class Element {
   }
   setParentNode(parent) {
       this.parentNode = parent;
+  }
+  get nextSibling() {
+    return this.parentNode.children[this.parentNode.children.indexOf(this)+1] || null;
+  }
+  get previousSibling() {
+    return this.parentNode.children[this.parentNode.children.indexOf(this)-1] || null;
+  }
+  customGetAttributeNode(key) {
+    return {
+      specified: this._attributes[key] ? true : false,
+      value: this._attributes[key]
+    };
   }
   _removeChildren() {
     asyncSendMessage({action:'setHTML',id:this.id,html:''});
@@ -176,6 +217,7 @@ class Element {
     this.children = [];
   }
   removeNode() {
+
     this.parentNode.removeChild(this);
   }
   get firstChild() {
@@ -193,7 +235,10 @@ class Element {
     this.children.splice( index, 0, newElement );
   }
   remove() {
+    console.log('remove',this);
     this._removeChildren();
+    this.parentNode.children =  this.parentNode.children.filter(el=>el!==this);
+    // this.removeNode();
     // delete this = undefined;
   }
   removeChild(child) {
@@ -221,9 +266,15 @@ class Element {
   get id() {
     return this._id;
   }
+  propsToClone() {
+    return ['checked'];
+  }
   setAttribute(key, value) {
     if (key === 'id') {
       this._id = value;
+    }
+    if (key === 'checked') {
+      this.checked = value;
     }
     if (key === 'style') {
       value.split(';').forEach(e=>{
@@ -292,8 +343,17 @@ class Element {
   getAttribute(key) {
     return this._attributes[key];
   }
-  cloneNode() {
-    return this._root.createElement(this.nodeName);
+  cloneNode(deep) {
+    var newNode = this._root.createElement(this.nodeName);
+    this.propsToClone().forEach(prop=>{
+      newNode[prop] = this[prop];
+    });
+    if (deep) {
+      this.children.forEach(el=>{
+        newNode.appendChild(el.cloneNode(deep));
+      });
+    }
+    return newNode
   }
   constructor(nodeName) {
     // if (!nodeName) {
@@ -383,6 +443,7 @@ class Element {
     } else {
       this._appendChild(children);
     }
+    return children;
   }
 }
 
@@ -457,6 +518,22 @@ var styleProxy = {
   }
 }
 
+
+var realWindowProxy = {
+  get(target, prop) {
+    // if (target.tagName) {
+          // console.log('get',target, prop);
+    // }
+
+    return target[prop] || self[prop];
+  },
+  set(target, prop, value) {
+    // console.log('set',target, prop, value);
+    target[prop] = value;
+    return true;
+  }
+}
+
 var windowProxy = {
   get(target, prop) {
     // if (target.tagName) {
@@ -478,6 +555,18 @@ class Document {
       return;
     }
     this._ids[id]._syncDom();
+  }
+  get defaultView() {
+    return window;
+  }
+  get ownerDocument() {
+    return this;
+  }
+  get nodeType() {
+    return 9;
+  }
+  createComment(text) {
+    return `<!--${text}-->`;
   }
   getElementsByTagName(tagName) {
       if (tagName === '*') {
@@ -518,6 +607,17 @@ class Document {
     this.taggedElements = {};
     // this.htmlParser = htmlParser;
     this._ids = {};
+    this.implementation = {
+      // Ember hook
+      createHTMLDocument: function() {
+        return {
+          body: {
+            innerHTML: ()=>{},
+            childNodes: [1,2]
+          }
+        }
+      }
+    };
     this.allNodes = [];
     this.nodeCounter = 0;
     this.head = this._createElement('head');
@@ -535,6 +635,16 @@ class Document {
     // console.log('createElement',nodeName,arguments);
     return this._createElement(nodeName);
   }
+  querySelector(q) {
+    console.log('querySelector',q);
+    if (q === 'meta[name="ember-observer/config/environment"]') {
+      return {
+        getAttribute() {
+          return '%7B%22modulePrefix%22%3A%22ember-observer%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22router-scroll%22%2C%22historySupportMiddleware%22%3Atrue%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22ember-observer%22%2C%22version%22%3A%220.0.0+2beb269f%22%7D%2C%22metricsAdapters%22%3A%5B%7B%22name%22%3A%22GoogleAnalytics%22%2C%22environments%22%3A%5B%22production%22%5D%2C%22config%22%3A%7B%22id%22%3A%22UA-59673320-1%22%7D%7D%2C%7B%22name%22%3A%22LocalAdapter%22%2C%22environments%22%3A%5B%22development%22%5D%7D%5D%2C%22ember-cli-mirage%22%3A%7B%22usingProxy%22%3Atrue%2C%22useDefaultPassthroughs%22%3Atrue%7D%2C%22exportApplicationGlobal%22%3Afalse%7D';
+        }
+      }
+    }
+  }
   createElement(nodeName) {
     // console.log('createElement',nodeName,arguments);
     return new Proxy(this._createElement(nodeName),windowProxy);
@@ -547,7 +657,7 @@ class Document {
   }
 }
 
-var window = new Proxy({},windowProxy);
+var window = new Proxy({},realWindowProxy);
 window.requestAnimationFrame = requestAnimationFrame;
 var _localStorage = {};
 window.localStorage = {
@@ -572,6 +682,14 @@ window.history.pushState = function(state, title, url) {
 window.screen = {
     width: 1280,
     height: 720
+}
+// Object.defineProperty(window,'Ember',{
+//   get() {
+//     return self[];
+//   }
+// })
+window.location = {
+  href: "http://127.0.0.1:2015/"
 }
 window.scrollTo = function() {
   console.log(arguments);
