@@ -6,14 +6,14 @@
 ```javascript
 
 console.time('commonAppend');
-for (var i = 0; i < 10000; i++) {
+for (let i = 0; i < 10000; i++) {
 	body.appendChild(document.createElement('div'));
 }
 console.timeEnd('commonAppend');
 // -> 1000ms
 
 console.time('asyncAppend');
-for (var i = 0; i < 10000; i++) {
+for (let i = 0; i < 10000; i++) {
 	let id = i;
 	asyncSendMessage({
 		action: 'createNode',
@@ -40,7 +40,7 @@ console.timeEnd('asyncAppend');
 * Optional DOM modifications (if the performance does not allow this modification, it is thrown out of the queue)
 * Modifications orioritization and batching (you can create an array of modifications that will always be executed within a single frame)
 
-# Description:
+# Description
 This is a proof of concept of asynchronous DOM modification example with:
 * event binding
 * DOM modifications batching
