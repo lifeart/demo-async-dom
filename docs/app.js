@@ -487,10 +487,12 @@ function setStyle(data) {
 }
 // DOM action appendChild to head node
 function headAppendChild(data) {
+  data.childrenId = data.id;
   appendChild(data, document.head);
 }
 // DOM action appendChild to body node
 function bodyAppendChild(data) {
+  data.childrenId = data.id;
   appendChild(data, document.body);
 }
 // DOM action removeChild
