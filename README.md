@@ -10,7 +10,7 @@ for (let i = 0; i < 10000; i++) {
 	document.body.appendChild(document.createElement('div'));
 }
 console.timeEnd('commonAppend');
-//commonAppend: 62.622802734375ms
+//commonAppend: 62.622802734375ms - 300+ms (depend at layout calculation time, t != const)
 
 console.time('asyncAppend');
 for (let i = 0; i < 10000; i++) {
@@ -26,7 +26,7 @@ for (let i = 0; i < 10000; i++) {
 	});
 }
 console.timeEnd('asyncAppend');
-//asyncAppend: 277.938232421875ms
+//asyncAppend: 277.938232421875ms (not depend at layout calculation time, t = const)
 
 console.time('asyncAppendGroup');
 for (let i = 0; i < 10000; i++) {
@@ -41,7 +41,7 @@ for (let i = 0; i < 10000; i++) {
 	}]);
 }
 console.timeEnd('asyncAppendGroup');
-//asyncAppend: 117.579833984375ms
+//asyncAppend: 117.579833984375ms (not depend at layout calculation time, t = const)
 
 console.time('asyncAppendBatch');
 var msgs = [];
@@ -59,7 +59,7 @@ for (let i = 0; i < 10000; i++) {
 }
 asyncSendMessage(msgs);
 console.timeEnd('asyncAppendBatch');
-//asyncAppend: 23.794189453125ms
+//asyncAppend: 23.794189453125ms (not depend at layout calculation time, t = const)
 
 ```
 # Logic
