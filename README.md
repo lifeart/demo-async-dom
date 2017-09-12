@@ -28,6 +28,21 @@ for (let i = 0; i < 10000; i++) {
 console.timeEnd('asyncAppend');
 //asyncAppend: 277.938232421875ms
 
+console.time('asyncAppendGroup');
+for (let i = 0; i < 10000; i++) {
+	let id = i;
+	asyncSendMessage([{
+		action: 'createNode',
+		id: id,
+		tag: 'div'
+	},{
+		action: 'bodyAppendChild',
+		id: id
+	}]);
+}
+console.timeEnd('asyncAppendGroup');
+//asyncAppend: 117.579833984375ms
+
 console.time('asyncAppendBatch');
 var msgs = [];
 for (let i = 0; i < 10000; i++) {
