@@ -7,10 +7,10 @@
 
 console.time('commonAppend');
 for (let i = 0; i < 10000; i++) {
-	body.appendChild(document.createElement('div'));
+	document.body.appendChild(document.createElement('div'));
 }
 console.timeEnd('commonAppend');
-// -> 1000ms
+//commonAppend: 62.622802734375ms
 
 console.time('asyncAppend');
 for (let i = 0; i < 10000; i++) {
@@ -26,7 +26,24 @@ for (let i = 0; i < 10000; i++) {
 	});
 }
 console.timeEnd('asyncAppend');
-// -> 10ms
+//asyncAppend: 277.938232421875ms
+
+console.time('asyncAppendBatch');
+var msgs = [];
+for (let i = 0; i < 10000; i++) {
+	let id = i;
+	msgs.push([{
+		action: 'createNode',
+		id: id,
+		tag: 'div'
+	},{
+		action: 'bodyAppendChild',
+		id: id
+	}]);
+}
+asyncSendMessage(msgs);
+console.timeEnd('asyncAppendBatch');
+//asyncAppend: 27.975830078125ms
 
 ```
 # Logic
