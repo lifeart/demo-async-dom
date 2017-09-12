@@ -47,18 +47,19 @@ console.time('asyncAppendBatch');
 var msgs = [];
 for (let i = 0; i < 10000; i++) {
 	let id = i;
-	msgs.push([{
+	msgs.push({
 		action: 'createNode',
 		id: id,
 		tag: 'div'
-	},{
+	});
+	msgs.push({
 		action: 'bodyAppendChild',
 		id: id
-	}]);
+	});
 }
 asyncSendMessage(msgs);
 console.timeEnd('asyncAppendBatch');
-//asyncAppend: 27.975830078125ms
+//asyncAppend: 23.794189453125ms
 
 ```
 # Logic
