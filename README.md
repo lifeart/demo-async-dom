@@ -1,5 +1,6 @@
 # Demo-async-dom, #AsyncDOM
 [Demo page](https://lifeart.github.io/demo-async-dom/) with async dom and wrebworkers
+[Demo page Ember.js App](https://lifeart.github.io/demo-async-dom/ember/index.html) with async dom and wrebworkers
 
 # Why?
 
