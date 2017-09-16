@@ -1,6 +1,7 @@
 var window = undefined;
 var _this = self;
 
+
 self.importScripts('ww-transport.js');
 self.importScripts('pseudo-dom.js');
 self.importScripts('mdrnizer.js');
@@ -18,8 +19,13 @@ self.setTimeout = function(cb,time) {
     });
   },time);
 };
+window.Event = function() {
 
+}
+window.chrome = {};
+var global  = window;
 window.setTimeout = self.setTimeout;
+
 // self.setInterval = function(cb,time) {
 //   console.log('setInterval');
 //   return _setInterval(()=>{
@@ -30,8 +36,10 @@ window.setTimeout = self.setTimeout;
 //   },time);
 // };
 
-// self.importScripts('qml.app.js');
-// self.importScripts('https://wzrd.in/standalone/babel-polyfill@latest');
+
+self.importScripts('https://ember-api-docs-frontend.global.ssl.fastly.net/assets/vendor-be4c74c653b439444054fbaf16b02bea.js');
 // self.importScripts('https://emberobserver.com/assets/vendor-63fb928166ab18a0d8a59b4c0239d88b.js');
+var regeneratorRuntime = window.regeneratorRuntime;
 // self.importScripts('https://emberobserver.com/assets/ember-observer-6183d2e97f093c7a7b31ab8faeda96d6.js');
-self.importScripts('http://pureqml.com/qml.index.min.js');
+self.importScripts('https://ember-api-docs-frontend.global.ssl.fastly.net/assets/ember-api-docs-f260be3bbe602aac5e4bf94c38a4a8e5.js');
+// self.importScripts('http://pureqml.com/qml.index.min.js');

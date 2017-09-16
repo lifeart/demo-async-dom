@@ -429,6 +429,9 @@ function getNode(id, data) {
   if (id === 'window') {
     return window;
   }
+  if (id === 'document') {
+    return document;
+  }
 	if (!nodesCache[id]) {
 		nodesCache[id] = document.getElementById(id);
 	}
@@ -454,11 +457,20 @@ function createNode(data) {
   }
 
   if (data.tag.charAt(0) === '#') {
-    nodesCache[data.id] = document.createTextNode(data.id);
+    nodesCache[data.id] = document.createTextNode(data.textContent);
     return;
   }
 
-	var node = document.createElement(data.tag);
+
+
+	var node = null;
+
+  if (['svg','path'].indexOf(data.tag.toLowerCase())>-1) {
+      node = document.createElementNS('http://www.w3.org/2000/svg',data.tag.toLowerCase());
+      console.log(node,data.tag);
+  } else {
+    node = document.createElement(data.tag);
+  }
   if (data.tag.toLowerCase() === 'canvas') {
     node.style.display = 'none';
   }
@@ -487,14 +499,32 @@ function appendChild(data) {
   // if (data.id === 'body-node') {
       // console.log('appendChild',data,parent,children);
   // }
+  if (!parent) {
+    if (data.id === 'async-dom-3') {
+      parent = document.body.parentNode;
+    } else {
+      parent = document.body;
+    }
+
+    console.log(data);
+    // return;
+  }
+  if (!children) {
+    console.log('appendChild: unable to find children', data);
+    return;
+  }
 	parent.appendChild(children);
 }
 
 // DOM action el.innerHTML
 function setHTML(data) {
 	log('setHTML', data);
+  var node = getNode(data.id);
+  if (node) {
+    node.innerHTML = data.html;
+  }
 	// if (getNode(data.id).innerHTML !== data.html) {
-		getNode(data.id).innerHTML = data.html;
+		// getNode(data.id).
 	// }
 
 	return;
@@ -518,14 +548,30 @@ function setTextContent(data) {
 	return getNode(data.id).textContent = data.textContent;
 }
 
+function createNodeAlias(id,newId) {
+  // console.log('createNodeAlias',id,newId);
+  nodesCache[newId] = nodesCache[id];
+}
+
 // DOM action setAttribute
+function removeAttribute(data) {
+  var node =  getNode(data.id, data);
+  if (node) {
+    node.removeAttribute(data.attribute);
+  }
+}
+
 function setAttribute(data) {
   var node =  getNode(data.id, data);
   if (!node) {
-    console.log('setAttribute',data);
-    return;
+      console.log('setAttribute',data);
+      return;
+  }
+  if (data.attribute === 'id') {
+    createNodeAlias(node.id, data.value);
   }
 	node.setAttribute(data.attribute,data.value);
+
 }
 
 // DOM action setStyle
@@ -546,6 +592,13 @@ function setStyle(data) {
 	}
 	node.style[data.attribute] = data.value;
 }
+function setProperty(data) {
+	var node = getNode(data.id);
+	if (!node) {
+		return;
+	}
+  node[data.property] = data.value;
+}
 // DOM action appendChild to head node
 function headAppendChild(data) {
 	var node = getNode(data.id);
@@ -565,7 +618,13 @@ function removeNode(data) {
 		return;
 	}
 	delete nodesCache[data.id];
-	node.parentNode.removeChild(node);
+  if (node.parentNode) {
+    node.parentNode.removeChild(node);
+  } else {
+    node.remove();
+  }
+
+
 }
 // DOM action classList.remove
 function removeClass(data) {
@@ -627,7 +686,16 @@ function getStyleValue(data) {
 }
 // Event to Object transormation (to pass it to ww)
 function eventToObject(e) {
-  e.preventDefault();
+
+  // console.log(e.target.id);
+  // console.log('eventToObject',e);
+  if (e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'a') {
+    e.preventDefault();
+  }
+  if (e.currentTarget && e.currentTarget.tagName && e.currentTarget.tagName.toLowerCase() === 'a') {
+    e.preventDefault();
+  }
+
 	return {
 		altKey: e.altKey,
 		bubbles: e.bubbles,
@@ -641,10 +709,11 @@ function eventToObject(e) {
 		composed: e.composed,
 		ctrlKey: e.ctrlKey,
 		currentTarget: e.currentTarget?e.currentTarget.id:null,
+		relatedTarget: e.relatedTarget?e.relatedTarget.id:null,
 		defaultPrevented: e.defaultPrevented,
 		detail: e.detail,
 		eventPhase: e.eventPhase,
-		eventPhase: e.fromElement?e.fromElement.id:null,
+		fromElement: e.fromElement?e.fromElement.id:null,
 		isTrusted: e.isTrusted,
 		layerX: e.layerX,
 		layerY: e.layerY,
@@ -659,8 +728,11 @@ function eventToObject(e) {
 		screenX: e.screenX,
 		screenY: e.screenY,
 		shiftKey: e.shiftKey,
+    path: [],
+    region: e.region || null,
 		srcElement: e.srcElement?e.srcElement.id:null,
-		target: e.target.id,
+		target: e.target?e.target.id : null,
+		type: e.type || undefined,
 		timeStamp: e.timeStamp,
 		toElement: e.toElement?e.toElement.id:null,
 		which: e.which,
@@ -684,7 +756,13 @@ function customAddEventListener(data) {
 		e.uid = `_${data.uid}_${data.name}`;
 		sendMessage(e);
 	};
-	getNode(data.id).addEventListener(data.name, eventCallback.bind(data), false);
+  var node = getNode(data.id,data);
+  if (node) {
+    	node.addEventListener(data.name, eventCallback.bind(data), false);
+  } else {
+    console.log('addEventListener', data);
+  }
+
 	return {};
 }
 
@@ -709,7 +787,25 @@ function loadImage(data) {
   }
 	img.src = data.src;
 }
+function customInsertBefore(data) {
+  // action:'insertBefore',id:this.id,newId: newElement.id, refId: referenceElement.id})
+  // console.log('customInsertBefore',data);
+  var root = getNode(data.id);
+  if (root) {
+    var newEl = getNode(data.newId);
+    if (newEl) {
+      if (data.refId) {
+        var refEl = getNode(data.refId);
+        if (refEl) {
+          root.insertBefore(newEl,refEl);
+        }
+      } else {
+        root.insertBefore(newEl,null);
+      }
 
+    }
+  }
+}
 function styleSheetAddRule(data) {
   var node = getNode(data.id,data);
   var name = data.selector;
@@ -742,7 +838,11 @@ function scrollTo() {
 
 function customPushState(data) {
   //data.url
-  window.history.pushState(data.state, data.title);
+  window.history.pushState(data.state, data.title, data.url);
+}
+function customReplaceState(data) {
+  //data.url
+  window.history.replaceState(data.state, data.title, data.url);
 }
 // single action evaluation logic
 function evaluateAction(data, callback) {
@@ -757,10 +857,12 @@ function evaluateAction(data, callback) {
 		'createNode': createNode,
 		'focus': focusEl,
 		'setHTML': setHTML,
+		'insertBefore': customInsertBefore,
 		'appendHTML': appendHTML,
 		'getInnerHTML': getInnerHTML,
 		'getStyleValue': getStyleValue,
 		'pushState': customPushState,
+		'replaceState': customReplaceState,
 		'setTextContent': setTextContent,
 		'styleSheetAddRule': styleSheetAddRule,
 		'alert': customAlert,
@@ -770,7 +872,9 @@ function evaluateAction(data, callback) {
 		'bodyAppendChild': bodyAppendChild,
 		'appendChild': appendChild,
 		'setAttribute': setAttribute,
+		'removeAttribute': removeAttribute,
 		'setStyle': setStyle,
+		'setProperty': setProperty,
 		'removeNode': removeNode,
 		'loadImage': loadImage,
     	'setClassName': setClassName,
