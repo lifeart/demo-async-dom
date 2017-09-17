@@ -832,6 +832,16 @@ function setClassName(data) {
   node.className =  data.name;
 }
 
+function customInsertAdjacentHTML(data) {
+
+	var node = getNode(data.id,data);
+  if (!node) {
+    return;
+  }
+  node.insertAdjacentHTML(data.position, data.html);
+
+}
+
 function scrollTo() {
   window.scrollTo(0,0);
 }
@@ -863,6 +873,7 @@ function evaluateAction(data, callback) {
 		'getStyleValue': getStyleValue,
 		'pushState': customPushState,
 		'replaceState': customReplaceState,
+		'insertAdjacentHTML': customInsertAdjacentHTML,
 		'setTextContent': setTextContent,
 		'styleSheetAddRule': styleSheetAddRule,
 		'alert': customAlert,

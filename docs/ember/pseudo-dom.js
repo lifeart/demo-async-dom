@@ -93,11 +93,14 @@ class Image {
 
 class Element {
   insertAdjacentHTML(position, html) {
+    // console.log('insertAdjacentHTML',position,html);
     if (position === 'beforeEnd') {
 
     } else if (position === 'beforeBegin') {
 
     }
+    asyncSendMessage({action:'insertAdjacentHTML',id:this.id,position:position,html:html});
+    this._syncDom();
     return null;
   }
   get protocol() {
