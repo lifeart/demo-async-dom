@@ -1,7 +1,7 @@
 # Demo-async-dom, #AsyncDOM
-* [Demo page](https://lifeart.github.io/demo-async-dom/) with async dom and wrebworkers
-* [Ember.js App](https://lifeart.github.io/demo-async-dom/ember/index.html) with async dom and wrebworkers
-* [Glimmer.js App](https://lifeart.github.io/demo-async-dom/glimmer-port/index.html) with async dom and wrebworkers
+* [Demo page](https://lifeart.github.io/demo-async-dom/) with async dom and webworkers
+* [Ember.js App](https://lifeart.github.io/demo-async-dom/ember/index.html) with async dom and webworkers
+* [Glimmer.js App](https://lifeart.github.io/demo-async-dom/glimmer-port/index.html) with async dom and webworkers
 * [Glimmer.js App (no AsyncDom)](https://lifeart.github.io/sierpinski-glimmer/)
 
 # Why?
