@@ -1,5 +1,5 @@
 // "our web-worker"
-var worker =  new Worker('ww2.js');
+var worker = new Worker('ww2.js');
 // viewportHeight (recalculated on each frame size)
 var viewportHeight = 0;
 // viewportWidth (recalculated on each frame size)
@@ -20,9 +20,9 @@ var nodesCache = {};
 
 // navigator object mirror
 var _navigator = {
-	userAgent: navigator.userAgent,
-	platform: navigator.platform,
-	language: navigator.language,
+  userAgent: navigator.userAgent,
+  platform: navigator.platform,
+  language: navigator.language,
 };
 
 // body style node
@@ -38,9 +38,9 @@ var criticalSize = 1500;
 // max size before we increase number of actions per frame
 var maxSizeBeforeFlush = 3000;
 // flush packet size
-var flushSize = 50;
+var flushSize = 500;
 // best fit pool size
-var commonPoolSize = fpsMs*2;
+var commonPoolSize = fpsMs * 2;
 // minimal loop size per action pack
 var minLoop = {
   actions: 0,
@@ -68,21 +68,21 @@ var frameId = 0;
 
 // viewport size calaculations
 function calcViewportSize() {
-	viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
-	viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
+  viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
+  viewportWidth = (window.innerWidth || document.documentElement.clientWidth);
 }
 //https://gomakethings.com/how-to-test-if-an-element-is-in-the-viewport-with-vanilla-javascript/
-function isInViewport (elem) {
-	if (!elem) {
-		return false;
-	}
+function isInViewport(elem) {
+  if (!elem) {
+    return false;
+  }
   var id = elem.id;
   if (!boundingClientRectCacheFrame[id]) {
     boundingClientRectCacheFrame[id] = frameId;
     boundingClientRectCache[id] = true;
   }
 
-  if (viewportVisibility+boundingClientRectCacheFrame[id] > frameId) {
+  if (viewportVisibility + boundingClientRectCacheFrame[id] > frameId) {
     return boundingClientRectCache[id];
   }
 
@@ -99,38 +99,38 @@ function isInViewport (elem) {
 }
 // send list of messages to ww
 function sendMessages(items) {
-	var args = Array.prototype.slice.call(arguments);
-	args.forEach((items)=>{
-		if (Array.isArray(items)) {
-			items.forEach((item) => {
-				sendMessage(item);
-			});
-		} else {
-			sendMessage(items);
-		}
-	})
+  var args = Array.prototype.slice.call(arguments);
+  args.forEach((items) => {
+    if (Array.isArray(items)) {
+      items.forEach((item) => {
+        sendMessage(item);
+      });
+    } else {
+      sendMessage(items);
+    }
+  })
 }
 // send single message to ww
 function sendMessage(data) {
-  log('sendMessage',data);
+  log('sendMessage', data);
   worker.postMessage(data);
 }
 
-worker.onmessage = (e)=>{
+worker.onmessage = (e) => {
   actionScheduler(e.data);
 };
 
 // Listen for scroll events
-window.addEventListener('scroll', ( event ) => {
+window.addEventListener('scroll', (event) => {
 
-	if (pointerEventsStyleNode !== 'none') {
-		pointerEventsStyleNode = 'none';
-	}
+  if (pointerEventsStyleNode !== 'none') {
+    pointerEventsStyleNode = 'none';
+  }
 
-  window.clearTimeout( renderConfig.isScrolling );
+  window.clearTimeout(renderConfig.isScrolling);
 
   renderConfig.isScrolling = setTimeout(() => {
-		pointerEventsStyleNode = 'auto';
+    pointerEventsStyleNode = 'auto';
     renderConfig.isScrolling = false;
   }, 66);
 
@@ -139,39 +139,39 @@ window.addEventListener('scroll', ( event ) => {
 // app init procedure
 sendMessages(
 
-// {
-	// uid: '_setNavigator',
-	// navigator: _navigator
-// },{
-	// uid: 'set_modernizr_custom',
-	// modernizr_custom: {}
-// },
-{
-	uid: '_setLocation',
-	location: {
-		hash: window.location.hash,
-		href: window.location.href,
-		port: window.location.port,
-		host: window.location.host,
-		origin: window.location.origin,
-		hostname: window.location.hostname,
-		pathname: window.location.pathname,
-		protocol: window.location.protocol,
-		search: window.location.search,
-		state: window.history.state,
-	}
-},
-// ,{
-	// uid: '_setScreen',
-	// screen: {
-		// width: window.screen.width,
-		// height: window.screen.height,
-	// }
-// },
+  // {
+  // uid: '_setNavigator',
+  // navigator: _navigator
+  // },{
+  // uid: 'set_modernizr_custom',
+  // modernizr_custom: {}
+  // },
+  {
+    uid: '_setLocation',
+    location: {
+      hash: window.location.hash,
+      href: window.location.href,
+      port: window.location.port,
+      host: window.location.host,
+      origin: window.location.origin,
+      hostname: window.location.hostname,
+      pathname: window.location.pathname,
+      protocol: window.location.protocol,
+      search: window.location.search,
+      state: window.history.state,
+    }
+  },
+  // ,{
+  // uid: '_setScreen',
+  // screen: {
+  // width: window.screen.width,
+  // height: window.screen.height,
+  // }
+  // },
 
-{
-	uid: 'init',
-});
+  {
+    uid: 'init',
+  });
 
 // window.onfocus = () => {
 // 	sendMessage({
@@ -197,9 +197,9 @@ sendMessages(
 // check action - should we skipt it from render?
 function shouldSkip(data) {
   // if (data.action !== 'createNode' && data.id) {
-		// if (!nodesCache[data.id]) {
-			// return true;
-		// }
+  // if (!nodesCache[data.id]) {
+  // return true;
+  // }
   // }
   if (data.length || !data.optional) {
     return false;
@@ -210,7 +210,7 @@ function shouldSkip(data) {
   if ((renderConfig.isScrolling || document.hidden) && data.optional) {
     return true;
   }
-  if (data.optional && actionsList.length > criticalSize / 2 ) {
+  if (data.optional && actionsList.length > criticalSize / 2) {
     return true;
   }
   if (renderConfig.timePerLastFrame > (fpsMs + 0.2) && data.optional) {
@@ -242,11 +242,11 @@ function smartBatchSort(actions) {
     'createNode': 1,
     'setAttribute': 2,
     'addEventListener': 3,
-		'appendChild': 4,
+    'appendChild': 4,
     'bodyAppendChild': 5,
-		'removeNode': 6
+    'removeNode': 6
   };
-  return actions.sort((a,b)=>{
+  return actions.sort((a, b) => {
     return priorityActionsMap[a.action] - priorityActionsMap[b.action];
   });
   // priority - create, style, append
@@ -260,9 +260,21 @@ function performanceFeedback(delta, actions) {
 }
 
 // put resived actions to dom actions list
+
+let currentGrowSpeed = 10;
+let actionsPool = 0;
+let firstLineTime = Date.now();
+let lastLineTme = Date.now();
 function actionScheduler(action) {
   if (!shouldSkip(action)) {
     actionsList.push(action);
+    actionsPool++;
+    lastLineTme = Date.now();
+    if (lastLineTme - firstLineTime > fpsMs) {
+      currentGrowSpeed = actionsPool;
+      firstLineTime = lastLineTme;
+      actionsPool = 0;
+    }
   } else {
     skip(action);
   }
@@ -274,16 +286,16 @@ function clearActions() {
 }
 
 // get some render and evaluate priority for actions
-function prioritySort(a,b) {
-	if (a.priority && !b.priority) {
-		return -1;
-	}
-	if (!a.priority && b.priority) {
-		return 1;
-	}
-	if (a.priority && b.priority) {
-		return b.priority - a.priority;
-	}
+function prioritySort(a, b) {
+  if (a.priority && !b.priority) {
+    return -1;
+  }
+  if (!a.priority && b.priority) {
+    return 1;
+  }
+  if (a.priority && b.priority) {
+    return b.priority - a.priority;
+  }
   if (a.optional && !b.optional) {
     return 1;
   }
@@ -303,7 +315,7 @@ function prioritySort(a,b) {
 function getActionsForLoop() {
   var optimalCap = getOptimalActionsCap();
   actionsList = actionsList.sort(prioritySort);
-  var actions = actionsList.splice(0,optimalCap);
+  var actions = actionsList.splice(0, optimalCap);
   return actions;
 }
 
@@ -318,24 +330,33 @@ function calcAvgActionTime() {
 // funky logic to get optimal actions count for current frame
 function getOptimalActionsCap() {
 
-  var optimalCandidate = Math.round(fpsMs / (renderConfig.timePerLastFrame/renderConfig.totalActions));
+  var optimalCandidate = Math.round(fpsMs / (renderConfig.timePerLastFrame / renderConfig.totalActions));
 
   if (isNaN(optimalCandidate) || !isFinite(optimalCandidate)) {
     optimalCandidate = 0;
   }
 
-  var optimalCap = Math.round((fpsMs*3)/(avgActionTime || 1) || 10);
-  if ( optimalCap > 1 ) {
+  if (optimalCandidate > currentGrowSpeed) {
+    optimalCandidate = currentGrowSpeed;
+  }
+
+  var optimalCap = Math.round((fpsMs * 3) / (avgActionTime || 1) || 10);
+
+  if (optimalCap > currentGrowSpeed) {
+    optimalCap = currentGrowSpeed;
+  }
+
+  if (optimalCap > 1) {
     optimalCap--;
   }
   var maxLength = actionsList.length;
-  if (maxLength-1 < optimalCap) {
+  if (maxLength - 1 < optimalCap) {
     optimalCap = maxLength;
   }
   if (maxLength >= maxSizeBeforeFlush) {
     optimalCap = flushSize;
   }
-  if (maxLength>criticalSize) {
+  if (maxLength > criticalSize) {
     return criticalSize;
   }
   if (optimalCap < optimalCandidate && flushSize > optimalCap) {
@@ -346,6 +367,7 @@ function getOptimalActionsCap() {
   if (maxLength > commonPoolSize && optimalCap < commonPoolSize) {
     optimalCap = commonPoolSize;
   }
+
   return optimalCap;
 }
 
@@ -363,7 +385,7 @@ function skip(action, result) {
 
 // if action can't fit in 16ms range push it back
 function pushBackAction(action) {
-  log('pushBackAction',action);
+  log('pushBackAction', action);
   actionsList.unshift(action);
 }
 
@@ -372,7 +394,7 @@ function actionLoop(startMs) {
   frameId++;
   calcViewportSize();
   var newActions = getActionsForLoop();
-  log('actions.length',newActions.length);
+  log('actions.length', newActions.length);
   var totalActions = newActions.length;
   const totalActionsSize = totalActions;
   newActions.forEach(action => {
@@ -382,19 +404,19 @@ function actionLoop(startMs) {
       pushBackAction(action);
       return;
     }
-    performAction(action, (result)=>{
+    performAction(action, (result) => {
       if (result.skip || (result.result && result.skip)) {
         totalActions--;
       }
-  	  if (result.result && result.result.timeShift) {
-		    totalActions--;
-	      startMs -= result.timeShift;
-  	  }
+      if (result.result && result.result.timeShift) {
+        totalActions--;
+        startMs -= result.timeShift;
+      }
       // console.log('skip',action,result);
       skip(action, result);
     });
   });
-  var feedbackDelta = performance.now()-startMs;
+  var feedbackDelta = performance.now() - startMs;
 
   if (feedbackDelta < minLoop.time && totalActions > 1) {
     minLoop.time = feedbackDelta;
@@ -408,10 +430,10 @@ function actionLoop(startMs) {
 
   var delta = fpsMs - feedbackDelta;
   if (delta < 0) {
-    delta  = 5;
+    delta = 5;
   }
   if (totalActions) {
-    performanceFeedback(feedbackDelta,totalActions);
+    performanceFeedback(feedbackDelta, totalActions);
   }
   requestAnimationFrame(actionLoop);
 }
@@ -421,7 +443,7 @@ function log() {
   if (!debug) {
     return;
   }
-  console.log.apply(this,Array.prototype.slice.call(arguments));
+  console.log.apply(this, Array.prototype.slice.call(arguments));
 }
 
 // node cache
@@ -432,13 +454,13 @@ function getNode(id, data) {
   if (id === 'document') {
     return document;
   }
-	if (!nodesCache[id]) {
-		nodesCache[id] = document.getElementById(id);
-	}
-	if (!nodesCache[id] && data && data.selector) {
-		return document.querySelector(data.selector);
-	}
-	return nodesCache[id];
+  if (!nodesCache[id]) {
+    nodesCache[id] = document.getElementById(id);
+  }
+  if (!nodesCache[id] && data && data.selector) {
+    return document.querySelector(data.selector);
+  }
+  return nodesCache[id];
 }
 
 // DOM action createElement
@@ -453,12 +475,12 @@ function createNode(data) {
   }
 
   if (data.tag === 'HTML') {
-    function createNodeAlias(id,newId) {
+    function createNodeAlias(id, newId) {
       // console.log('createNodeAlias',id,newId);
       nodesCache[newId] = nodesCache[id];
     }
     nodesCache[data.id] = document.parentNode;
-    
+
     return;
   }
 
@@ -475,41 +497,41 @@ function createNode(data) {
 
 
 
-	var node = null;
+  var node = null;
 
-  if (['svg','path'].indexOf(data.tag.toLowerCase())>-1) {
-      node = document.createElementNS('http://www.w3.org/2000/svg',data.tag.toLowerCase());
-      console.log(node,data.tag);
+  if (['svg', 'path'].indexOf(data.tag.toLowerCase()) > -1) {
+    node = document.createElementNS('http://www.w3.org/2000/svg', data.tag.toLowerCase());
+    console.log(node, data.tag);
   } else {
     node = document.createElement(data.tag);
   }
   if (data.tag.toLowerCase() === 'canvas') {
     node.style.display = 'none';
   }
-	node.id = data.id
-	if (data.href) {
-		node.href = data.href;
-	}
-	if (data.textContent) {
-    console.log('textContent',data.textContent);
-		node.textContent = data.textContent;
-	}
-	if (data.target) {
-		node.target = data.target;
-	}
-	if (data.title) {
-		node.title = data.title;
-	}
-	nodesCache[data.id] = node;
+  node.id = data.id
+  if (data.href) {
+    node.href = data.href;
+  }
+  if (data.textContent) {
+    console.log('textContent', data.textContent);
+    node.textContent = data.textContent;
+  }
+  if (data.target) {
+    node.target = data.target;
+  }
+  if (data.title) {
+    node.title = data.title;
+  }
+  nodesCache[data.id] = node;
 }
 
 // DOM action appendChild
 function appendChild(data) {
 
-	var parent = getNode(data.id,data);
-	var children = getNode(data.childrenId,data);
+  var parent = getNode(data.id, data);
+  var children = getNode(data.childrenId, data);
   // if (data.id === 'body-node') {
-      // console.log('appendChild',data,parent,children);
+  // console.log('appendChild',data,parent,children);
   // }
   if (!parent) {
 
@@ -522,111 +544,111 @@ function appendChild(data) {
     console.log('appendChild: unable to find children', data);
     return;
   }
-	parent.appendChild(children);
+  parent.appendChild(children);
 }
 
 // DOM action el.innerHTML
 function setHTML(data) {
-	log('setHTML', data);
+  log('setHTML', data);
   var node = getNode(data.id);
   if (node) {
     node.innerHTML = data.html;
   }
-	// if (getNode(data.id).innerHTML !== data.html) {
-		// getNode(data.id).
-	// }
+  // if (getNode(data.id).innerHTML !== data.html) {
+  // getNode(data.id).
+  // }
 
-	return;
+  return;
 }
 
 //
 function getInnerHTML(data) {
-	log('getInnerHTML', data);
-	return; getNode(data.id, data).innerHTML;
+  log('getInnerHTML', data);
+  return; getNode(data.id, data).innerHTML;
 }
 
 // DOM action el.innerHTML
 function appendHTML(data) {
-	log('appendHTML', data);
-	getNode(data.id,data).innerHTML = getNode(data.id,data).innerHTML + data.html;
-	return;
+  log('appendHTML', data);
+  getNode(data.id, data).innerHTML = getNode(data.id, data).innerHTML + data.html;
+  return;
 }
 
 // DOM action setTextContent
 function setTextContent(data) {
-	return getNode(data.id).textContent = data.textContent;
+  return getNode(data.id).textContent = data.textContent;
 }
 
-function createNodeAlias(id,newId) {
+function createNodeAlias(id, newId) {
   // console.log('createNodeAlias',id,newId);
   nodesCache[newId] = nodesCache[id];
 }
 
 // DOM action setAttribute
 function removeAttribute(data) {
-  var node =  getNode(data.id, data);
+  var node = getNode(data.id, data);
   if (node) {
     node.removeAttribute(data.attribute);
   }
 }
 
 function setAttribute(data) {
-  var node =  getNode(data.id, data);
+  var node = getNode(data.id, data);
   if (!node) {
-      console.log('setAttribute',data);
-      return;
+    console.log('setAttribute', data);
+    return;
   }
   if (data.attribute === 'id') {
     createNodeAlias(node.id, data.value);
   }
-	node.setAttribute(data.attribute,data.value);
+  node.setAttribute(data.attribute, data.value);
 
 }
 
 // DOM action setStyle
 function setStyle(data) {
-  console.log('setStyle',data);
-	var node = getNode(data.id, data);
-	if (!node) {
-		return;
-	}
-	if (data.optional && renderConfig.skipNotInVewport) {
-		if (!isInViewport(node)) {
-			log('!isInViewport',data);
-			return {
-				skip:true
-			};
-		}
+  console.log('setStyle', data);
+  var node = getNode(data.id, data);
+  if (!node) {
+    return;
+  }
+  if (data.optional && renderConfig.skipNotInVewport) {
+    if (!isInViewport(node)) {
+      log('!isInViewport', data);
+      return {
+        skip: true
+      };
+    }
 
-	}
-	node.style[data.attribute] = data.value;
+  }
+  node.style[data.attribute] = data.value;
 }
 function setProperty(data) {
-	var node = getNode(data.id);
-	if (!node) {
-		return;
-	}
+  var node = getNode(data.id);
+  if (!node) {
+    return;
+  }
   node[data.property] = data.value;
 }
 // DOM action appendChild to head node
 function headAppendChild(data) {
-	var node = getNode(data.id);
-	node && document.head.appendChild(node);
+  var node = getNode(data.id);
+  node && document.head.appendChild(node);
 }
 // DOM action appendChild to body node
 function bodyAppendChild(data) {
-	var node = getNode(data.id);
-	node && document.body.appendChild(node);
+  var node = getNode(data.id);
+  node && document.body.appendChild(node);
 }
 // DOM action removeChild
 function removeNode(data) {
-	removeEventListeners(data);
-	var node = getNode(data.id);
-	if (!node) {
-		log('removeNode', data);
-		return;
-	}
-	delete nodesCache[data.id];
+  removeEventListeners(data);
+  var node = getNode(data.id);
+  if (!node) {
+    log('removeNode', data);
+    return;
+  }
+  delete nodesCache[data.id];
   if (node.parentNode) {
     node.parentNode.removeChild(node);
   } else {
@@ -637,41 +659,41 @@ function removeNode(data) {
 }
 // DOM action classList.remove
 function removeClass(data) {
-	return getNode(data.id).classList.remove(data.class);
+  return getNode(data.id).classList.remove(data.class);
 }
 
 function styleToObject(styleNode) {
   var obj = {};
   for (var i = 0; i < styleNode.length; i++) {
-      obj[styleNode[i]] = styleNode.getPropertyValue(styleNode[i]);
+    obj[styleNode[i]] = styleNode.getPropertyValue(styleNode[i]);
   }
   return obj;
 }
 
 // DOM action getElementById
 function customGetElementById(data) {
-	return getNodeData(data);
+  return getNodeData(data);
 }
 // DOM action getElementById
 function getNodeData(data) {
-	var node = getNode(data.id);
-	if (!node) {
-		return {};
-	}
-	return {
-		clientWidth: node.clientWidth || 0,
-		clientHeight: node.clientHeight || 0,
-		scrollWidth: node.scrollWidth || 0,
-		scrollHeight: node.scrollHeight || 0,
-		offsetWidth: node.offsetWidth || 0,
-		offsetHeight: node.offsetHeight || 0,
-		scrollTop: node.scrollTop || 0,
-		scrollLeft: node.scrollLeft || 0,
+  var node = getNode(data.id);
+  if (!node) {
+    return {};
+  }
+  return {
+    clientWidth: node.clientWidth || 0,
+    clientHeight: node.clientHeight || 0,
+    scrollWidth: node.scrollWidth || 0,
+    scrollHeight: node.scrollHeight || 0,
+    offsetWidth: node.offsetWidth || 0,
+    offsetHeight: node.offsetHeight || 0,
+    scrollTop: node.scrollTop || 0,
+    scrollLeft: node.scrollLeft || 0,
     style: styleToObject(node.style),
-		innerWidth: node.innerWidth || 0,
-		innerHeight: node.innerHeight || 0,
-		scrollY: node.scrollY || 0
-	};
+    innerWidth: node.innerWidth || 0,
+    innerHeight: node.innerHeight || 0,
+    scrollY: node.scrollY || 0
+  };
 }
 // event-listeners remover
 function removeEventListeners(data) {
@@ -679,19 +701,19 @@ function removeEventListeners(data) {
 }
 // focus element
 function focusEl(data) {
-	if (data.id) {
-		getNode(data.id).focus();
-	} else {
-		window.focus();
-	}
+  if (data.id) {
+    getNode(data.id).focus();
+  } else {
+    window.focus();
+  }
 }
 // DOM action classList.add
 function addClass(data) {
-	return getNode(data.id).classList.add(data.class);
+  return getNode(data.id).classList.add(data.class);
 }
 // DOM action getStyleValue
 function getStyleValue(data) {
-	return getNode(data.id).style[data.style];
+  return getNode(data.id).style[data.style];
 }
 // Event to Object transormation (to pass it to ww)
 function eventToObject(e) {
@@ -705,96 +727,96 @@ function eventToObject(e) {
     e.preventDefault();
   }
 
-	return {
-		altKey: e.altKey,
-		bubbles: e.bubbles,
-		button: e.button,
-		buttons: e.buttons,
-		keyCode: e.keyCode || null,
-		cancelBubble: e.cancelBubble,
-		cancelable: e.cancelable,
-		clientX: e.clientX,
-		clientY: e.clientY,
-		composed: e.composed,
-		ctrlKey: e.ctrlKey,
-		currentTarget: e.currentTarget?e.currentTarget.id:null,
-		relatedTarget: e.relatedTarget?e.relatedTarget.id:null,
-		defaultPrevented: e.defaultPrevented,
-		detail: e.detail,
-		eventPhase: e.eventPhase,
-		fromElement: e.fromElement?e.fromElement.id:null,
-		isTrusted: e.isTrusted,
-		layerX: e.layerX,
-		layerY: e.layerY,
-		metaKey: e.metaKey,
-		movementX: e.movementX,
-		movementY: e.movementY,
-		offsetX: e.offsetX,
-		offsetY: e.offsetY,
-		pageX: e.pageX,
-		pageY: e.pageY,
-		returnValue: e.returnValue,
-		screenX: e.screenX,
-		screenY: e.screenY,
-		shiftKey: e.shiftKey,
+  return {
+    altKey: e.altKey,
+    bubbles: e.bubbles,
+    button: e.button,
+    buttons: e.buttons,
+    keyCode: e.keyCode || null,
+    cancelBubble: e.cancelBubble,
+    cancelable: e.cancelable,
+    clientX: e.clientX,
+    clientY: e.clientY,
+    composed: e.composed,
+    ctrlKey: e.ctrlKey,
+    currentTarget: e.currentTarget ? e.currentTarget.id : null,
+    relatedTarget: e.relatedTarget ? e.relatedTarget.id : null,
+    defaultPrevented: e.defaultPrevented,
+    detail: e.detail,
+    eventPhase: e.eventPhase,
+    fromElement: e.fromElement ? e.fromElement.id : null,
+    isTrusted: e.isTrusted,
+    layerX: e.layerX,
+    layerY: e.layerY,
+    metaKey: e.metaKey,
+    movementX: e.movementX,
+    movementY: e.movementY,
+    offsetX: e.offsetX,
+    offsetY: e.offsetY,
+    pageX: e.pageX,
+    pageY: e.pageY,
+    returnValue: e.returnValue,
+    screenX: e.screenX,
+    screenY: e.screenY,
+    shiftKey: e.shiftKey,
     path: [],
     region: e.region || null,
-		srcElement: e.srcElement?e.srcElement.id:null,
-		target: e.target?e.target.id : null,
-		type: e.type || undefined,
-		timeStamp: e.timeStamp,
-		toElement: e.toElement?e.toElement.id:null,
-		which: e.which,
-		x: e.x,
-		y: e.y
-	};
+    srcElement: e.srcElement ? e.srcElement.id : null,
+    target: e.target ? e.target.id : null,
+    type: e.type || undefined,
+    timeStamp: e.timeStamp,
+    toElement: e.toElement ? e.toElement.id : null,
+    which: e.which,
+    x: e.x,
+    y: e.y
+  };
 }
 // Alert implementation
 function customAlert(data) {
-	var blockStart = performance.now();
-	alert(data.text);
-	return {
-		timeShift: performance.now()-blockStart
-	}
+  var blockStart = performance.now();
+  alert(data.text);
+  return {
+    timeShift: performance.now() - blockStart
+  }
 }
 // addEventListener implementation
 function customAddEventListener(data) {
-	log('addEventListener',data);
-	var eventCallback = function(domEvent) {
-		var e = eventToObject(domEvent);
-		e.uid = `_${data.uid}_${data.name}`;
-		sendMessage(e);
-	};
-  var node = getNode(data.id,data);
+  log('addEventListener', data);
+  var eventCallback = function (domEvent) {
+    var e = eventToObject(domEvent);
+    e.uid = `_${data.uid}_${data.name}`;
+    sendMessage(e);
+  };
+  var node = getNode(data.id, data);
   if (node) {
-    	node.addEventListener(data.name, eventCallback.bind(data), false);
+    node.addEventListener(data.name, eventCallback.bind(data), false);
   } else {
     console.log('addEventListener', data);
   }
 
-	return {};
+  return {};
 }
 
 
 function loadImage(data) {
-	var img = new Image();
-	img.onload = function() {
-		sendMessage({
-			uid: 'onload_' + data.id,
+  var img = new Image();
+  img.onload = function () {
+    sendMessage({
+      uid: 'onload_' + data.id,
       src: img.src,
-			naturalWidth: img.naturalWidth,
-			naturalHeight: img.naturalHeight,
-		});
-	}
-	img.onerror = function() {
-		sendMessage({
-			uid: 'onerror_' + data.id
-		});
-	}
-  if (data.src.indexOf('//')==-1) {
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+    });
+  }
+  img.onerror = function () {
+    sendMessage({
+      uid: 'onerror_' + data.id
+    });
+  }
+  if (data.src.indexOf('//') == -1) {
     data.src = 'https://tv.start.ru/' + data.src;
   }
-	img.src = data.src;
+  img.src = data.src;
 }
 function customInsertBefore(data) {
   // action:'insertBefore',id:this.id,newId: newElement.id, refId: referenceElement.id})
@@ -806,43 +828,43 @@ function customInsertBefore(data) {
       if (data.refId) {
         var refEl = getNode(data.refId);
         if (refEl) {
-          root.insertBefore(newEl,refEl);
+          root.insertBefore(newEl, refEl);
         }
       } else {
-        root.insertBefore(newEl,null);
+        root.insertBefore(newEl, null);
       }
 
     }
   }
 }
 function styleSheetAddRule(data) {
-  var node = getNode(data.id,data);
+  var node = getNode(data.id, data);
   var name = data.selector;
-  var rules =  data.rule;
+  var rules = data.rule;
 
-  if(! (node.sheet || {}).insertRule) {
-		var sheet = (node.styleSheet || node.sheet)
-		sheet.addRule(name, rules)
-	} else {
-		var sheet = node.sheet;
-		sheet.insertRule(name + '{' + rules + '}', sheet.cssRules.length);
-	}
+  if (!(node.sheet || {}).insertRule) {
+    var sheet = (node.styleSheet || node.sheet)
+    sheet.addRule(name, rules)
+  } else {
+    var sheet = node.sheet;
+    sheet.insertRule(name + '{' + rules + '}', sheet.cssRules.length);
+  }
 
   // node.styleSheet.addRule(data.selector,data.rule);
 }
 
 function setClassName(data) {
 
-	var node = getNode(data.id,data);
+  var node = getNode(data.id, data);
   if (!node) {
     return;
   }
 
-  node.className =  data.name;
+  node.className = data.name;
 }
 
 function scrollTo() {
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
 
 function customPushState(data) {
@@ -855,68 +877,68 @@ function customReplaceState(data) {
 }
 // single action evaluation logic
 function evaluateAction(data, callback) {
-  log('evaluateAction',data);
+  log('evaluateAction', data);
   if (shouldSkip(data)) {
-    log('skip',data);
-    return callback({skip:true});
+    log('skip', data);
+    return callback({ skip: true });
   }
   var start = performance.now();
 
-	var actions = {
-		'createNode': createNode,
-		'focus': focusEl,
-		'setHTML': setHTML,
-		'insertBefore': customInsertBefore,
-		'appendHTML': appendHTML,
-		'getInnerHTML': getInnerHTML,
-		'getStyleValue': getStyleValue,
-		'pushState': customPushState,
-		'replaceState': customReplaceState,
-		'setTextContent': setTextContent,
-		'styleSheetAddRule': styleSheetAddRule,
-		'alert': customAlert,
-		'scrollTo': scrollTo,
-		'addEventListener': customAddEventListener,
-		'headAppendChild': headAppendChild,
-		'bodyAppendChild': bodyAppendChild,
-		'appendChild': appendChild,
-		'setAttribute': setAttribute,
-		'removeAttribute': removeAttribute,
-		'setStyle': setStyle,
-		'setProperty': setProperty,
-		'removeNode': removeNode,
-		'loadImage': loadImage,
-    	'setClassName': setClassName,
-		'getElementById': customGetElementById,
-		'addClass': addClass,
-		'removeClass': removeClass
-	}
+  var actions = {
+    'createNode': createNode,
+    'focus': focusEl,
+    'setHTML': setHTML,
+    'insertBefore': customInsertBefore,
+    'appendHTML': appendHTML,
+    'getInnerHTML': getInnerHTML,
+    'getStyleValue': getStyleValue,
+    'pushState': customPushState,
+    'replaceState': customReplaceState,
+    'setTextContent': setTextContent,
+    'styleSheetAddRule': styleSheetAddRule,
+    'alert': customAlert,
+    'scrollTo': scrollTo,
+    'addEventListener': customAddEventListener,
+    'headAppendChild': headAppendChild,
+    'bodyAppendChild': bodyAppendChild,
+    'appendChild': appendChild,
+    'setAttribute': setAttribute,
+    'removeAttribute': removeAttribute,
+    'setStyle': setStyle,
+    'setProperty': setProperty,
+    'removeNode': removeNode,
+    'loadImage': loadImage,
+    'setClassName': setClassName,
+    'getElementById': customGetElementById,
+    'addClass': addClass,
+    'removeClass': removeClass
+  }
 
-	if (data.action) {
-		callback({result: actions[data.action](data)});
-    setTimePerAction(data.action, performance.now()-start);
-    log('action',data);
-	} else {
-		callback({});
-    log('no-action',data);
-	}
+  if (data.action) {
+    callback({ result: actions[data.action](data) });
+    setTimePerAction(data.action, performance.now() - start);
+    log('action', data);
+  } else {
+    callback({});
+    log('no-action', data);
+  }
 }
 // action pack handle logic
-function performAction(data,callback) {
+function performAction(data, callback) {
 
-	var result = [];
-	if (data.length) {
-		smartBatchSort(data).forEach(adata => {
-      evaluateAction(adata, (item)=>{
+  var result = [];
+  if (data.length) {
+    smartBatchSort(data).forEach(adata => {
+      evaluateAction(adata, (item) => {
         result.push(item);
         if (result.length === data.length) {
           callback(result);
         }
       });
-		});
-	} else {
-		evaluateAction(data,callback);
-	}
+    });
+  } else {
+    evaluateAction(data, callback);
+  }
 
 }
 // start the world

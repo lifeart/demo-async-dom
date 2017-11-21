@@ -20,7 +20,7 @@ self.setTimeout = function(cb,time) {
   },time);
 };
 window.Event = function() {
-
+  
 }
 window.chrome = {};
 var global  = window;

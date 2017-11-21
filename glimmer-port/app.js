@@ -260,9 +260,21 @@ function performanceFeedback(delta, actions) {
 }
 
 // put resived actions to dom actions list
+
+let currentGrowSpeed = 10;
+let actionsPool = 0;
+let firstLineTime = Date.now();
+let lastLineTme = Date.now();
 function actionScheduler(action) {
   if (!shouldSkip(action)) {
     actionsList.push(action);
+    actionsPool++;
+    lastLineTme = Date.now();
+    if (lastLineTme - firstLineTime > fpsMs) {
+      currentGrowSpeed = actionsPool;
+      firstLineTime = lastLineTme;
+      actionsPool = 0;
+    }
   } else {
     skip(action);
   }
@@ -323,8 +335,17 @@ function getOptimalActionsCap() {
   if (isNaN(optimalCandidate) || !isFinite(optimalCandidate)) {
     optimalCandidate = 0;
   }
+  
+  if (optimalCandidate > currentGrowSpeed) {
+    optimalCandidate = currentGrowSpeed;
+  }
 
   var optimalCap = Math.round((fpsMs*3)/(avgActionTime || 1) || 10);
+
+  if (optimalCap > currentGrowSpeed) {
+    optimalCap = currentGrowSpeed;
+  }
+
   if ( optimalCap > 1 ) {
     optimalCap--;
   }
@@ -346,6 +367,7 @@ function getOptimalActionsCap() {
   if (maxLength > commonPoolSize && optimalCap < commonPoolSize) {
     optimalCap = commonPoolSize;
   }
+
   return optimalCap;
 }
 

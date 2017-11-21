@@ -70,6 +70,10 @@ function asyncSendMessage(data) {
         _this.sendMessage(data, function(result) {
             resolve(result);
         });
+        /*
+        _this.sendMessage(data);
+        resolve({});
+        */
     });
 
     var waitingStates = [
@@ -253,13 +257,13 @@ var uids = {
 };
 
 function sendBatch() {
-	asyncBatchMessages(actionsList);
-	actionsList = [];
+    let actionsToSend = actionsList.splice(0, actionsList.length);
+    asyncBatchMessages(actionsToSend);
 }
 
 var updateTimeout = null
-var packSize = 145;
-var batchTimeout = 10;
+var packSize = 30;
+var batchTimeout = 4;
 var asyncBatch = function(action) {
   actionsList.push(action);
 	if (actionsList.length > packSize) {
