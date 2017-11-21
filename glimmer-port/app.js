@@ -604,7 +604,6 @@ function setAttribute(data) {
     createNodeAlias(node.id, data.value);
   }
 	node.setAttribute(data.attribute,data.value);
-
 }
 
 // DOM action setStyle
@@ -783,7 +782,6 @@ function customAlert(data) {
 }
 // addEventListener implementation
 function customAddEventListener(data) {
-	log('addEventListener',data);
 	var eventCallback = function(domEvent) {
 		var e = eventToObject(domEvent);
 		e.uid = `_${data.uid}_${data.name}`;

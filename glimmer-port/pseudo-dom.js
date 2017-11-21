@@ -102,6 +102,42 @@ class Element {
     }
     return null;
   }
+  set onclick(callback) {
+    this.addEventListener('click', callback);
+  }
+  set onmouseenter(callback) {
+    this.addEventListener('mouseenter', callback);
+  }
+  set onmouseup(callback) {
+    this.addEventListener('mouseup', callback);
+  }
+  set oncontextmenu(callback) {
+    this.addEventListener('contextmenu', callback);
+  }
+  set ondblclick(callback) {
+    this.addEventListener('dblclick', callback);
+  }
+  set onmousedown(callback) {
+    this.addEventListener('mousedown', callback);
+  }
+  set onmousemove(callback) {
+    this.addEventListener('mousemove', callback);
+  }
+  set onmouseover(callback) {
+    this.addEventListener('mouseover', callback);
+  } 
+  set onmouseleave(callback) {
+    this.addEventListener('mouseleave', callback);
+  }
+  set onkeyup(callback) {
+    this.addEventListener('keyup', callback);
+  }
+  set onkeypress(callback) {
+    this.addEventListener('keypress', callback);
+  }
+  set onkeydown(callback) {
+    this.addEventListener('keydown', callback);
+  }
   get protocol() {
         var url = this.href;
         if (url.charAt(0) === '/' && url.charAt(1) !== '/') {
@@ -552,7 +588,6 @@ class Element {
     console.log('removeEventListener',arguments);
   }
   addEventListener(name, callback) {
-    // console.log('addEventListener',name,this);
     if (!name) {
       return;
     }
@@ -692,7 +727,7 @@ var windowProxy = {
     return target[prop];
   },
   set(target, prop, value) {
-    // console.log('set',target, prop, value);
+    // 
     target[prop] = value;
     return true;
   }
@@ -715,7 +750,7 @@ class Document {
     console.log('createEvent',arguments);
   }
   addEventListener(name, callback) {
-    // console.log('addEventListener',name,this);
+
     if (!name) {
       return;
     }

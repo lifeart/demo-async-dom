@@ -1,4 +1,4 @@
-const hexToRgba = function(hex, a) {
+const hexToRgba = function (hex, a) {
   if (hex.charAt(0) !== '#') {
     return hex;
   }
@@ -20,7 +20,7 @@ const hexToRgba = function(hex, a) {
 
   let o;
   if (newHex.length === 8) {
-    o = +((parseInt(newHex.substring(6, 8), 16)/255).toFixed(2));
+    o = +((parseInt(newHex.substring(6, 8), 16) / 255).toFixed(2));
   }
   o = isNumeric(a) ? a : o;
 
@@ -34,7 +34,7 @@ var navigator = {
   userAgent: 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
 }
 
-const asyncMessage = asyncSendMessage;
+const asyncMessage = asyncBatchMessages;
 
 var KEBAB_REGEX = /[A-Z\u00C0-\u00D6\u00D8-\u00DE]/g;
 var REVERSE_REGEX = /-[a-z\u00E0-\u00F6\u00F8-\u00FE]/g;
@@ -42,23 +42,23 @@ var kebabCache = {};
 function kebabCase(str) {
   if (!kebabCache[str]) {
     kebabCache[str] = str.replace(KEBAB_REGEX, function (match) {
-  		return '-' + match.toLowerCase();
-  	});
+      return '-' + match.toLowerCase();
+    });
   }
-	return kebabCache[str];
+  return kebabCache[str];
 };
 
 
 var imageId = 0;
 
 function EventAdapter(callback) {
-  return function(e) {
+  return function (e) {
     e.currentTarget = document._ids[e.currentTarget];
     e.srcElement = document._ids[e.srcElement];
     e.target = document._ids[e.target] || e.currentTarget || null;
     e.toElement = document._ids[e.toElement];
     e.eventPhase = document._ids[e.eventPhase];
-    e.preventDefault = ()=>{};
+    e.preventDefault = () => { };
     callback(e);
   }
 }
@@ -67,10 +67,10 @@ function EventAdapter(callback) {
 class Image {
   set src(value) {
     this._src = value;
-    asyncImageLoad(this._imgId, this._src , function(result) {
-      this.naturalWidth =  result.naturalWidth;
-      this.naturalHeight =  result.naturalHeight;
-      this.src =  result.src;
+    asyncImageLoad(this._imgId, this._src, function (result) {
+      this.naturalWidth = result.naturalWidth;
+      this.naturalHeight = result.naturalHeight;
+      this.src = result.src;
       if (typeof this.onload === 'function') {
         this.onload();
       }
@@ -79,16 +79,16 @@ class Image {
   get src() {
     return this._src;
   }
-	constructor() {
-		imageId++;
-		this._imgId = imageId;
-		this.src = '';
-		this.onload = '';
-		this.onerror = '';
-    this.node =  document.createElement('img');
+  constructor() {
+    imageId++;
+    this._imgId = imageId;
+    this.src = '';
+    this.onload = '';
+    this.onerror = '';
+    this.node = document.createElement('img');
     this.node.src = this.src;
     return this;
-	}
+  }
 }
 
 
@@ -102,19 +102,55 @@ class Element {
     }
     return null;
   }
+  set onclick(callback) {
+    this.addEventListener('click', callback);
+  }
+  set onmouseenter(callback) {
+    this.addEventListener('mouseenter', callback);
+  }
+  set onmouseup(callback) {
+    this.addEventListener('mouseup', callback);
+  }
+  set oncontextmenu(callback) {
+    this.addEventListener('contextmenu', callback);
+  }
+  set ondblclick(callback) {
+    this.addEventListener('dblclick', callback);
+  }
+  set onmousedown(callback) {
+    this.addEventListener('mousedown', callback);
+  }
+  set onmousemove(callback) {
+    this.addEventListener('mousemove', callback);
+  }
+  set onmouseover(callback) {
+    this.addEventListener('mouseover', callback);
+  }
+  set onmouseleave(callback) {
+    this.addEventListener('mouseleave', callback);
+  }
+  set onkeyup(callback) {
+    this.addEventListener('keyup', callback);
+  }
+  set onkeypress(callback) {
+    this.addEventListener('keypress', callback);
+  }
+  set onkeydown(callback) {
+    this.addEventListener('keydown', callback);
+  }
   get protocol() {
-        var url = this.href;
-        if (url.charAt(0) === '/' && url.charAt(1) !== '/') {
-          url = 'http://localhost:2015' + url;
-        }
+    var url = this.href;
+    if (url.charAt(0) === '/' && url.charAt(1) !== '/') {
+      url = 'http://localhost:2015' + url;
+    }
     var n = new URL(url);
 
-    return  n.protocol;
+    return n.protocol;
   }
   set innerHTML(value) {
 
 
-    console.log('innerHTML',value);
+    console.log('innerHTML', value);
     this._removeChildren();
 
     this._innerHTML = value;
@@ -123,21 +159,21 @@ class Element {
       return;
     }
 
-    if (value.indexOf('>')==-1) {
+    if (value.indexOf('>') == -1) {
       this.textContent = value;
-      asyncMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
+      asyncMessage({ action: 'setTextContent', id: this.id, textContent: this.textContent });
       this._syncDom();
 
       return;
       // return;
     }
 
-    if (value.indexOf('<style>')>-1) {
+    if (value.indexOf('<style>') > -1) {
       // this.appendChild(this._root.createElement('style'));
       // return;
     }
 
-    value  = value.replace('</br>','<br/>')
+    value = value.replace('</br>', '<br/>')
 
     // var nodes = this._root.htmlParser.parse(value);
     // console.log('textContent',nodes);
@@ -146,37 +182,37 @@ class Element {
 
     // Ember.js hook
     if (value === '<textarea>x</textarea>') {
-      asyncMessage({action:'setHTML',id:this.id,html:this.textContent});
+      asyncMessage({ action: 'setHTML', id: this.id, html: this.textContent });
       this.appendChild(this._root.createElement('textarea')).defaultValue = 'x';
     } else {
       this.textContent = value;
-        // console.log('textContent',this.textContent);
-        asyncMessage({action:'setHTML',id:this.id,html:this.textContent});
-        // asyncMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
-        this._syncDom();
+      // console.log('textContent',this.textContent);
+      asyncMessage({ action: 'setHTML', id: this.id, html: this.textContent });
+      // asyncMessage({action:'setTextContent',id:this.id,textContent:this.textContent});
+      this._syncDom();
     }
 
 
     // }
     // nodes.childNodes.forEach(node=>{
-      // console.log('uppend',node);
-      // if (node) {
-        // this.appendChild(this._root.createElement(node.nodeName));
-      // }
+    // console.log('uppend',node);
+    // if (node) {
+    // this.appendChild(this._root.createElement(node.nodeName));
+    // }
     // });
   }
   select() {
-    console.log('select',arguments);
+    console.log('select', arguments);
   }
   blur() {
-    console.log('blur',arguments);
+    console.log('blur', arguments);
   }
   get className() {
     return this._classes.join(' ');
   }
   set className(value) {
     // console.log('setclassName',value,this.id ,this.tagName);
-    asyncMessage({action:'setClassName',id:this.id,name:value});
+    asyncMessage({ action: 'setClassName', id: this.id, name: value });
     this._syncDom();
     this._classes = value.split(' ');
 
@@ -195,7 +231,7 @@ class Element {
     // if ()
     // return 3;
     // if (this.tagName === 'BODY') {
-      return 1;
+    return 1;
     // }
     // console.log('nodeType',this.tagName);
     // return 3;
@@ -211,23 +247,23 @@ class Element {
     return 0;
   }
   getComputedStyle() {
-    console.log('getComputedStyle',this.style);
+    console.log('getComputedStyle', this.style);
     return this.style;
   }
   setParentNode(parent) {
-      this.parentNode = parent;
+    this.parentNode = parent;
   }
   get nextSibling() {
     if (!this.parentNode) {
       return null;
     }
-    return this.parentNode.children[this.parentNode.children.indexOf(this)+1] || null;
+    return this.parentNode.children[this.parentNode.children.indexOf(this) + 1] || null;
   }
   get previousSibling() {
     if (!this.parentNode) {
       return null;
     }
-    return this.parentNode.children[this.parentNode.children.indexOf(this)-1] || null;
+    return this.parentNode.children[this.parentNode.children.indexOf(this) - 1] || null;
   }
   customGetAttributeNode(key) {
     return {
@@ -236,10 +272,10 @@ class Element {
     };
   }
   _removeChildren() {
-    asyncMessage({action:'setHTML',id:this.id,html:''});
-    this.children.forEach(el=>{
+    asyncMessage({ action: 'setHTML', id: this.id, html: '' });
+    this.children.forEach(el => {
       if (typeof el.remove === 'function') {
-          el.remove();
+        el.remove();
       } else {
         console.log('unable to remove el', el);
       }
@@ -255,36 +291,35 @@ class Element {
     return this.children[0] || null;
   }
   get lastChild() {
-    return this.children[this.children.length-1] || null;
+    return this.children[this.children.length - 1] || null;
   }
   insertBefore(newElement, referenceElement) {
     var index = this.children.indexOf(referenceElement);
     if (index < 0) {
       index = 0;
     }
-    // console.log('insertBefore','newEl',newElement,'this',this,'ref',referenceElement);
     newElement.setParentNode(this);
-    this.children.splice( index, 0, newElement );
-    asyncMessage({action:'insertBefore',id:this.id,newId: newElement.id, refId: referenceElement?referenceElement.id:null});
+    this.children.splice(index, 0, newElement);
+    asyncMessage({ action: 'insertBefore', id: this.id, newId: newElement.id, refId: referenceElement ? referenceElement.id : null });
   }
   remove() {
     // console.log('remove',this);
     this._removeChildren();
     if (this.parentNode) {
-        this.parentNode.children =  this.parentNode.children.filter(el=>el!==this);
+      this.parentNode.children = this.parentNode.children.filter(el => el !== this);
     }
 
-    asyncMessage({action:'removeNode',id:this.id});
+    asyncMessage({ action: 'removeNode', id: this.id });
     // this.removeNode();
     // delete this = undefined;
   }
   removeChild(child) {
-    this.children = this.children.filter(el=>el!==child);
+    this.children = this.children.filter(el => el !== child);
     child.parentNode = null;
     if (typeof child.remove === 'function') {
-        child.remove();
+      child.remove();
     } else {
-      console.log('removeChild',child);
+      console.log('removeChild', child);
     }
 
   }
@@ -310,7 +345,7 @@ class Element {
   set id(value) {
     // console.log('setId', value);
     var oldId = this._id;
-    asyncMessage({action:'setAttribute',id:oldId,attribute:'id',value:value});
+    asyncMessage({ action: 'setAttribute', id: oldId, attribute: 'id', value: value });
     this._root._ids[value] = this;
     this._id = value;
     this._attributes['id'] = value;
@@ -320,7 +355,7 @@ class Element {
     return true;
   }
   set display(value) {
-    console.log('set display',value);
+    console.log('set display', value);
     return true;
   }
   get id() {
@@ -344,8 +379,8 @@ class Element {
       this.checked = value;
     }
     if (key === 'style') {
-      value.split(';').forEach(e=>{
-        let [key,v] = e.split(':');
+      value.split(';').forEach(e => {
+        let [key, v] = e.split(':');
         if (key && typeof v !== 'undefined') {
           if (key === 'background-color') {
             v = hexToRgba(v);
@@ -355,19 +390,19 @@ class Element {
       });
     }
     this._attributes[key] = value;
-    asyncMessage({action:'setAttribute',optional:key === 'style'?true:false,id:this.id,attribute:key,value:value});
+    asyncMessage({ action: 'setAttribute', optional: key === 'style' ? true : false, id: this.id, attribute: key, value: value });
     this._syncDom();
   }
   _syncDom() {
     return;
     if (!this.offsetHeight) {
-        const offHeight = parseInt(this._style.height, 10);
-        // console.log(this._style.height);
-        if (isNaN(offHeight)) {
-          this.offsetHeight = 15;
-        } else {
-          this.offsetHeight = offHeight;
-        }
+      const offHeight = parseInt(this._style.height, 10);
+      // console.log(this._style.height);
+      if (isNaN(offHeight)) {
+        this.offsetHeight = 15;
+      } else {
+        this.offsetHeight = offHeight;
+      }
     }
     if (!this.offsetWidth) {
       const offWidth = parseInt(this._style.width, 10);
@@ -380,7 +415,7 @@ class Element {
       // console.log('ewe',this._style.width);
       // this.offsetWidth = this.style.width;
     }
-    asyncMessage({action:'getElementById',id:this.id}).then(result=>{
+    asyncMessage({ action: 'getElementById', id: this.id }).then(result => {
       var node = result.result;
       if (!result.result.style) {
         // console.log(result.result);
@@ -413,11 +448,11 @@ class Element {
   }
   cloneNode(deep) {
     var newNode = this._root.createElement(this.nodeName);
-    this.propsToClone().forEach(prop=>{
+    this.propsToClone().forEach(prop => {
       newNode[prop] = this[prop];
     });
     if (deep) {
-      this.children.forEach(el=>{
+      this.children.forEach(el => {
         newNode.appendChild(el.cloneNode(deep));
       });
     }
@@ -425,8 +460,8 @@ class Element {
   }
   constructor(nodeName) {
     // if (!nodeName) {
-      // return undefined;
-      // debugger;
+    // return undefined;
+    // debugger;
     // }
     var _this = this;
 
@@ -460,25 +495,25 @@ class Element {
 
 
     this.styleSheet = {
-      addRule(selector,rule) {
+      addRule(selector, rule) {
 
-          asyncMessage({action:'styleSheetAddRule',id:_this.id,selector:selector,rule:rule});
-          // console.log('addRule',_this,arguments);
+        asyncMessage({ action: 'styleSheetAddRule', id: _this.id, selector: selector, rule: rule });
+        // console.log('addRule',_this,arguments);
       }
     }
 
     this.classList = {
-        add(name) {
-          _this._classes.push(name);
-          _this.className = _this._classes.join(' ');
-        },
-        remove(name) {
-          var newClasses = _this._classes.filter(e=>e!==name);
-          _this.className = newClasses.join(' ');
-        },
-        contains(name) {
-          return _this.className.indexOf(name) > -1;
-        }
+      add(name) {
+        _this._classes.push(name);
+        _this.className = _this._classes.join(' ');
+      },
+      remove(name) {
+        var newClasses = _this._classes.filter(e => e !== name);
+        _this.className = newClasses.join(' ');
+      },
+      contains(name) {
+        return _this.className.indexOf(name) > -1;
+      }
 
     }
 
@@ -501,7 +536,7 @@ class Element {
       return false;
     }
     var hasEl = false;
-    el.children.forEach(child=>{
+    el.children.forEach(child => {
       if (hasEl) {
         return;
       }
@@ -512,18 +547,18 @@ class Element {
     return hasEl;
   }
   querySelectorAll(selector) {
-    if (selector.indexOf('[data-')>-1) {
-      console.log('querySelectorAll',selector,this);
-      if (selector.indexOf('=')===-1) {
+    if (selector.indexOf('[data-') > -1) {
+      console.log('querySelectorAll', selector, this);
+      if (selector.indexOf('=') === -1) {
         var results = [];
-        var searchKey = selector.replace('[','').replace(']','');
-        this.children.forEach(el=>{
-            if (el._attributes && el._attributes[searchKey]) {
-              results.push(el);
-            }
+        var searchKey = selector.replace('[', '').replace(']', '');
+        this.children.forEach(el => {
+          if (el._attributes && el._attributes[searchKey]) {
+            results.push(el);
+          }
         });
         return {
-          item: function(index) {
+          item: function (index) {
             return results[index] || null;
           },
           length: results.length
@@ -541,7 +576,7 @@ class Element {
     if (!element.id) {
       return;
     }
-    asyncMessage({action:'appendChild',id:this.id,childrenId:element.id});
+    asyncMessage({ action: 'appendChild', id: this.id, childrenId: element.id });
     this._syncDom();
     this.children.push(element);
   }
@@ -550,18 +585,17 @@ class Element {
       return;
     }
     // asyncMessage({action:'addEventListener',id:this.id,name:name,callback:callback)});
-    console.log('removeEventListener',arguments);
+    console.log('removeEventListener', arguments);
   }
   addEventListener(name, callback) {
-    // console.log('addEventListener',name,this);
     if (!name) {
       return;
     }
-    asyncMessage({action:'addEventListener',id:this.id,name:name,callback:EventAdapter(callback)});
+    asyncMessage({ action: 'addEventListener', id: this.id, name: name, callback: EventAdapter(callback) });
   }
   appendChild(children) {
     if (children.type === 'fragment') {
-      console.log('appendFragment',children);
+      console.log('appendFragment', children);
       children.children.forEach((el) => {
         this._appendChild(el);
       });
@@ -586,21 +620,21 @@ class TextNode {
     return newNode
   }
   remove() {
-      asyncMessage({action:'removeNode',id:this._id});
+    asyncMessage({ action: 'removeNode', id: this._id });
   }
   get nodeType() {
     return 3;
   }
   set nodeValue(value) {
     // console.log('nodeValue',value);
-    asyncMessage({action:'setProperty',id:this._id,property:'nodeValue',value:value});
+    asyncMessage({ action: 'setProperty', id: this._id, property: 'nodeValue', value: value });
   }
   get nodeValue() {
     return this.innerHTML;
     console.log('nodeValue');
   }
   setParentNode(parent) {
-      this.parentNode = parent;
+    this.parentNode = parent;
   }
   constructor(data) {
     this.innerHTML = data;
@@ -621,18 +655,18 @@ var styleProxy = {
     var kebabProp = kebabCase(prop);
     if (kebabProp === 'css-text') {
 
-      value.split(';').forEach(e=>{
-        let [key,v] = e.split(':');
+      value.split(';').forEach(e => {
+        let [key, v] = e.split(':');
         if (key && typeof v !== 'undefined') {
           if (key === 'background-color') {
             // console.log(v);
             v = hexToRgba(v);
           }
           // console.log(key,v);
-            target[key.trim()] = v.trim();
+          target[key.trim()] = v.trim();
         }
       });
-      target.node.setAttribute('style',value);
+      target.node.setAttribute('style', value);
       console.log(target);
       return true;
     }
@@ -655,9 +689,9 @@ var styleProxy = {
     }
 
     // if (prop === 'opacity') {
-      // val = 1;
+    // val = 1;
     // }
-    asyncMessage({action:'setStyle',id:target.node.id,attribute:kebabProp,value:val});
+    asyncMessage({ action: 'setStyle', id: target.node.id, attribute: kebabProp, value: val });
 
     // console.log('target.id',target);
 
@@ -672,7 +706,7 @@ var styleProxy = {
 var realWindowProxy = {
   get(target, prop) {
     // if (target.tagName) {
-          // console.log('get',target, prop);
+    // console.log('get',target, prop);
     // }
 
     return target[prop] || self[prop];
@@ -687,13 +721,13 @@ var realWindowProxy = {
 var windowProxy = {
   get(target, prop) {
     // if (target.tagName) {
-          // console.log('get',target, prop);
+    // console.log('get',target, prop);
     // }
 
     return target[prop];
   },
   set(target, prop, value) {
-    // console.log('set',target, prop, value);
+    // 
     target[prop] = value;
     return true;
   }
@@ -713,21 +747,21 @@ class Document {
     this._ids[id]._syncDom();
   }
   createEvent() {
-    console.log('createEvent',arguments);
+    console.log('createEvent', arguments);
   }
   addEventListener(name, callback) {
-    // console.log('addEventListener',name,this);
+
     if (!name) {
       return;
     }
-    asyncMessage({action:'addEventListener',id:'document',name:name,callback:EventAdapter(callback)});
+    asyncMessage({ action: 'addEventListener', id: 'document', name: name, callback: EventAdapter(callback) });
   }
   removeEventListener(name, callback) {
     if (!name) {
       return;
     }
     // asyncMessage({action:'addEventListener',id:this.id,name:name,callback:callback)});
-    console.log('removeEventListener',arguments);
+    console.log('removeEventListener', arguments);
   }
   get defaultView() {
     return window;
@@ -739,19 +773,19 @@ class Document {
     return 9;
   }
   createComment(text) {
-    return new CommentNode(text);
+    return new Proxy(this._createCommentElement(text), windowProxy);
     // return `<!--${text}-->`;
   }
   getElementsByTagName(tagName) {
-      if (tagName === '*') {
-        var els = [];
-        for (let i in this.taggedElements) {
-          this.taggedElements[i].forEach(e=>els.push(e));
-        }
-        return els;
+    if (tagName === '*') {
+      var els = [];
+      for (let i in this.taggedElements) {
+        this.taggedElements[i].forEach(e => els.push(e));
       }
-      // console.log('getElementsByTagName',tagName);
-      return this.taggedElements[tagName.toUpperCase()];
+      return els;
+    }
+    // console.log('getElementsByTagName',tagName);
+    return this.taggedElements[tagName.toUpperCase()];
   }
   get htmlParser() {
     return htmlParser;
@@ -762,11 +796,11 @@ class Document {
     this._ids = {};
     this.implementation = {
       // Ember hook
-      createHTMLDocument: function() {
+      createHTMLDocument: function () {
         return {
           body: {
-            innerHTML: ()=>{},
-            childNodes: [1,2]
+            innerHTML: () => { },
+            childNodes: [1, 2]
           }
         }
       }
@@ -778,7 +812,7 @@ class Document {
     this.body = this._createElement('body');
     this.body.setParentNode(this);
     this.documentElement = this._createElement('html');
-    this.parentNode =  this.documentElement;
+    this.parentNode = this.documentElement;
 
   }
   getElementById(id) {
@@ -790,18 +824,18 @@ class Document {
     return this._createElement(nodeName);
   }
   querySelectorAll(selector) {
-    if (selector.indexOf('[data-')>-1) {
-      console.log('querySelectorAll',selector,this);
-      if (selector.indexOf('=')===-1) {
+    if (selector.indexOf('[data-') > -1) {
+      console.log('querySelectorAll', selector, this);
+      if (selector.indexOf('=') === -1) {
         var results = [];
-        var searchKey = selector.replace('[','').replace(']','');
-        this.children.forEach(el=>{
-            if (el._attributes && el._attributes[searchKey]) {
-              results.push(el);
-            }
+        var searchKey = selector.replace('[', '').replace(']', '');
+        this.children.forEach(el => {
+          if (el._attributes && el._attributes[searchKey]) {
+            results.push(el);
+          }
         });
         return {
-          item: function(index) {
+          item: function (index) {
             return results[index] || null;
           },
           length: results.length
@@ -811,7 +845,7 @@ class Document {
     return [];
   }
   querySelector(q) {
-    console.log('querySelector',q);
+    console.log('querySelector', q);
     if (q === 'body') {
       return this.body;
     }
@@ -834,32 +868,42 @@ class Document {
   }
   createElement(nodeName) {
     // console.log('createElement',nodeName,arguments);
-    return new Proxy(this._createElement(nodeName),windowProxy);
+    return new Proxy(this._createElement(nodeName), windowProxy);
   }
-  _createElement(name,textContent) {
-      this.nodeCounter++;
-      var nodeId = `async-dom-${this.nodeCounter}`;
-      var elementName = String(name).toUpperCase();
-      var node = new Element(elementName);
-      node._root = this;
-      if (!this.taggedElements[elementName]) {
-        this.taggedElements[elementName] = [];
-      }
-      this.taggedElements[elementName].push(node);
-      this.allNodes.push(node);
-      node.textContent = textContent;
-      // console.log('textContent',textContent);
-      if (elementName === 'BODY') {
-          node._id = 'body-node';
-      } else if (elementName === 'HEAD') {
-          node._id = 'head-node';
-      } else {
-        node._id = nodeId;
-      }
-      this._ids[node._id] = node;
-      asyncMessage({action:'createNode',id:node.id,tag:node.tagName,textContent:textContent||''});
-      // console.log('elementName',elementName);
-      return node;
+  _createCommentElement(textContent) {
+    this.nodeCounter++;
+    var nodeId = `async-dom-${this.nodeCounter}`;
+    var node = new CommentNode(textContent);
+    this.allNodes.push(node);
+    node._root = this;
+    this._ids[node._id] = node;
+    asyncMessage({ action: 'createComment', id: node.id, textContent: textContent || '' });
+    return new Proxy(node, windowProxy);
+  }
+  _createElement(name, textContent) {
+    this.nodeCounter++;
+    var nodeId = `async-dom-${this.nodeCounter}`;
+    var elementName = String(name).toUpperCase();
+    var node = new Element(elementName);
+    node._root = this;
+    if (!this.taggedElements[elementName]) {
+      this.taggedElements[elementName] = [];
+    }
+    this.taggedElements[elementName].push(node);
+    this.allNodes.push(node);
+    node.textContent = textContent;
+    // console.log('textContent',textContent);
+    if (elementName === 'BODY') {
+      node._id = 'body-node';
+    } else if (elementName === 'HEAD') {
+      node._id = 'head-node';
+    } else {
+      node._id = nodeId;
+    }
+    this._ids[node._id] = node;
+    asyncMessage({ action: 'createNode', id: node.id, tag: node.tagName, textContent: textContent || '' });
+    // console.log('elementName',elementName);
+    return node;
   }
   _createTextNode(text) {
     this.nodeCounter++;
@@ -875,7 +919,7 @@ class Document {
     node._id = nodeId;
     node.id = nodeId;
     this._ids[nodeId] = node;
-    asyncMessage({action:'createNode',id:nodeId,tag:'#text',textContent:text});
+    asyncMessage({ action: 'createNode', id: nodeId, tag: '#text', textContent: text });
     // console.log('elementName',elementName);
     return node;
 
@@ -889,16 +933,16 @@ class Document {
   }
 }
 
-var window = new Proxy({},realWindowProxy);
+var window = new Proxy({}, realWindowProxy);
 window.requestAnimationFrame = requestAnimationFrame;
 var _localStorage = {};
 window.localStorage = {
-	setItem: function(key,value) {
-		_localStorage[key] = value;
-	},
-	getItem: function(key) {
-		_localStorage[key];
-	},
+  setItem: function (key, value) {
+    _localStorage[key] = value;
+  },
+  getItem: function (key) {
+    _localStorage[key];
+  },
 };
 
 function getComputedStyle(el) {
@@ -906,20 +950,20 @@ function getComputedStyle(el) {
   return el.getComputedStyle();
 }
 window.getComputedStyle = getComputedStyle;
-var document = new Proxy(new Document(),windowProxy);
+var document = new Proxy(new Document(), windowProxy);
 window.history = {};
 window.history.state = [];
-window.history.pushState = function(state, title, url) {
-  asyncMessage({action:'pushState',id:Date.now(),state:state,title:title,url:url});
-  console.log('pushState',arguments);
+window.history.pushState = function (state, title, url) {
+  asyncMessage({ action: 'pushState', id: Date.now(), state: state, title: title, url: url });
+  console.log('pushState', arguments);
 }
-window.history.replaceState = function(state, title, url) {
-  asyncMessage({action:'replaceState',id:Date.now(),state:state,title:title,url:url});
-  console.log('replaceState',arguments);
+window.history.replaceState = function (state, title, url) {
+  asyncMessage({ action: 'replaceState', id: Date.now(), state: state, title: title, url: url });
+  console.log('replaceState', arguments);
 }
 window.screen = {
-    width: 1280,
-    height: 720
+  width: 1280,
+  height: 720
 }
 // Object.defineProperty(window,'Ember',{
 //   get() {
@@ -931,19 +975,19 @@ window.location = {
   protocol: 'http:',
   pathname: '/'
 }
-window.scrollTo = function() {
+window.scrollTo = function () {
   console.log(arguments);
-    // asyncMessage({action:'scrollTo',id:'window'});
+  // asyncMessage({action:'scrollTo',id:'window'});
   // console.log('scrollTo', arguments);
 }
-window.addEventListener = function(name, callback) {
+window.addEventListener = function (name, callback) {
   console.log('addEventListener', name, callback);
   if (name === 'load') {
     setTimeout(callback, 200);
   }
-  asyncMessage({action:'addEventListener',id:'window',name:name,callback:EventAdapter(callback)});
+  asyncMessage({ action: 'addEventListener', id: 'window', name: name, callback: EventAdapter(callback) });
 }
-window.removeEventListener = function(name, callback) {
+window.removeEventListener = function (name, callback) {
   console.log('removeEventListener', name, callback);
   // if (name === 'load') {
   //   setTimeout(callback, 200);
@@ -961,12 +1005,12 @@ class Text {
 window.document = document;
 window.document.location = window.location;
 window.Element = Element;
-window.dispatchEvent = function() {
+window.dispatchEvent = function () {
   console.log('dispatchEvent', arguments);
 }
 
 let node = document.createElement('div');
-node.setAttribute('id','app');
+node.setAttribute('id', 'app');
 document.body.appendChild(node);
 
 function cancelAnimationFrame(id) {
@@ -974,7 +1018,7 @@ function cancelAnimationFrame(id) {
 }
 let lastId = 0;
 let frameActions = [];
-let frameWindow = 16000;
+let frameWindow = 26000;
 let lastSchedule = 0;
 
 function requestAnimationFrame(callback) {
@@ -988,14 +1032,20 @@ function goFrame() {
   let p = performance.now();
   // console.log(p);
   let length = frameActions.length;
-  
+
 
   for (let i = 0; i < length; i++) {
     frameActions[i](p);
   }
   frameActions.splice(0, length);
+
   // console.log(frameWindow-(performance.now()-p));
-  setTimeout(goFrame,(frameWindow-(performance.now()-p))/1000);
+  //console.log('delta',delta);
+  //Promise.all(WAITING_LIST).then(()=>{
+  const delta = (frameWindow - (performance.now() - p)) / 1000;
+  setTimeout(goFrame, delta);
+  //});
+
   // console.log(performance.now()-p);
 }
 
