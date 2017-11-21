@@ -603,7 +603,9 @@ function setAttribute(data) {
   if (data.attribute === 'id') {
     createNodeAlias(node.id, data.value);
   }
-	node.setAttribute(data.attribute,data.value);
+
+  node.setAttribute(data.attribute, data.value);
+
 }
 
 // DOM action setStyle

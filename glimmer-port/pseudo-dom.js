@@ -366,7 +366,6 @@ class Element {
   }
   removeAttribute(key) {
     delete this._attributes[key];
-    //console.log('removeAttribute',key);
     //asyncMessage({action:'removeAttribute',id:this.id,attribute:key});
   }
   setAttribute(key, value) {
@@ -620,7 +619,8 @@ class TextNode {
     return newNode
   }
   remove() {
-      asyncMessage({action:'removeNode',id:this._id});
+    asyncMessage({action:'removeNode',id:this._id});
+    this.parentNode = null;
   }
   get nodeType() {
     return 3;
@@ -631,7 +631,6 @@ class TextNode {
   }
   get nodeValue() {
     return this.innerHTML;
-    console.log('nodeValue');
   }
   setParentNode(parent) {
       this.parentNode = parent;
@@ -642,9 +641,10 @@ class TextNode {
   }
 }
 class CommentNode extends TextNode {
-
+  get nodeType() {
+    return 8;
+  }
 }
-
 
 var styleProxy = {
   get(target, prop) {
@@ -875,6 +875,7 @@ class Document {
     var nodeId = `async-dom-${this.nodeCounter}`;
     var node = new CommentNode(textContent);
     this.allNodes.push(node);
+    node._id = nodeId;
     node._root = this;
     this._ids[node._id] = node;
     asyncMessage({ action: 'createComment', id: node.id, textContent: textContent || '' });
