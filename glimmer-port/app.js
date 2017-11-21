@@ -38,7 +38,7 @@ var criticalSize = 1500;
 // max size before we increase number of actions per frame
 var maxSizeBeforeFlush = 3000;
 // flush packet size
-var flushSize = 50;
+var flushSize = 500;
 // best fit pool size
 var commonPoolSize = fpsMs*2;
 // minimal loop size per action pack

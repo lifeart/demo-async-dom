@@ -258,8 +258,8 @@ function sendBatch() {
 }
 
 var updateTimeout = null
-var packSize = 50;
-var batchTimeout = 400;
+var packSize = 145;
+var batchTimeout = 10;
 var asyncBatch = function(action) {
   actionsList.push(action);
 	if (actionsList.length > packSize) {

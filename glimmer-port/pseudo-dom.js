@@ -34,7 +34,7 @@ var navigator = {
   userAgent: 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
 }
 
-const asyncMessage = asyncSendMessage;
+const asyncMessage = asyncBatchMessages;
 
 var KEBAB_REGEX = /[A-Z\u00C0-\u00D6\u00D8-\u00DE]/g;
 var REVERSE_REGEX = /-[a-z\u00E0-\u00F6\u00F8-\u00FE]/g;
@@ -974,7 +974,7 @@ function cancelAnimationFrame(id) {
 }
 let lastId = 0;
 let frameActions = [];
-let frameWindow = 16000;
+let frameWindow = 26000;
 let lastSchedule = 0;
 
 function requestAnimationFrame(callback) {
@@ -994,8 +994,10 @@ function goFrame() {
     frameActions[i](p);
   }
   frameActions.splice(0, length);
+  const delta = (frameWindow-(performance.now()-p))/1000;
   // console.log(frameWindow-(performance.now()-p));
-  setTimeout(goFrame,(frameWindow-(performance.now()-p))/1000);
+  //console.log('delta',delta);
+  setTimeout(goFrame,delta);
   // console.log(performance.now()-p);
 }
 
