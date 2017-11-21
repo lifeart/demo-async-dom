@@ -8073,16 +8073,21 @@ class SierpinskiDot extends Component {
     constructor() {
         super(...arguments);
         this.hover = false;
+        this.allStyles = '';
+        this.tagName = '';
     }
     get text() {
         return this.hover ? '*' + this.args.text + '*' : this.args.text;
     }
-    get style() {
+    didInsertElement() {
         const s = this.args.size * 1.3;
-        const newStyle = Object.assign({}, dotStyle, { 'top': this.args.y + 'px', 'width': s + 'px', 'height': s + 'px', 'left': this.args.x + 'px', 'border-radius': s / 2 + 'px', 'line-height': s + 'px', 'background': this.hover ? '#ff0' : dotStyle.background });
-        return Object.keys(newStyle).map(key => {
+        const newStyle = Object.assign({}, dotStyle, { 'top': this.args.y + 'px', 'width': s + 'px', 'height': s + 'px', 'left': this.args.x + 'px', 'border-radius': s / 2 + 'px', 'line-height': s + 'px' });
+        this.allStyles = Object.keys(newStyle).map(key => {
             return `${key}:${newStyle[key]}`;
         }).join(';');
+    }
+    get style() {
+        return this.allStyles + ';background:' + (this.hover ? '#ff0' : dotStyle.background);
     }
     enter() {
         this.hover = true;
@@ -8095,7 +8100,7 @@ __decorate([tracked], SierpinskiDot.prototype, "hover", void 0);
 __decorate([tracked('args', 'hover')], SierpinskiDot.prototype, "text", null);
 __decorate([tracked('args', 'hover')], SierpinskiDot.prototype, "style", null);
 
-var __ui_components_SierpinskiDot_template__ = { "id": "PI6QDaG/", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[11,\"style\",[20,\"style\"],null],[11,\"onmouseenter\",[26,\"action\",[[22,[\"enter\"]]],null],null],[11,\"onmouseleave\",[26,\"action\",[[22,[\"leave\"]]],null],null],[8],[0,\" \"],[1,[20,\"text\"],false],[9]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiDot" } };
+var __ui_components_SierpinskiDot_template__ = { "id": "v4i1gVlB", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[11,\"style\",[20,\"style\"],null],[11,\"onmouseenter\",[26,\"action\",[[22,[\"enter\"]]],null],null],[11,\"onmouseleave\",[26,\"action\",[[22,[\"leave\"]]],null],null],[8],[1,[20,\"text\"],false],[9]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiDot" } };
 
 var __decorate$1 = undefined && undefined.__decorate || function (decorators, target, key, desc) {
     var c = arguments.length,
@@ -8119,6 +8124,7 @@ const styleLine = Object.keys(containerStyle).map(key => {
 class SierpinskiGlimmer extends Component {
     constructor() {
         super(...arguments);
+        this.tagName = '';
         this.targetSize = 25;
         this.start = 0;
         this.intervalID = null;
@@ -8146,14 +8152,14 @@ class SierpinskiGlimmer extends Component {
             this.updateRender();
             requestAnimationFrame(update);
         };
-        setTimeout(update);
+        requestAnimationFrame(update);
     }
 }
 __decorate$1([tracked], SierpinskiGlimmer.prototype, "seconds", void 0);
 __decorate$1([tracked], SierpinskiGlimmer.prototype, "elapsed", void 0);
 __decorate$1([tracked], SierpinskiGlimmer.prototype, "style", void 0);
 
-var __ui_components_SierpinskiGlimmer_template__ = { "id": "hHwWe/dW", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[11,\"style\",[20,\"style\"],null],[8],[0,\"\\n    \"],[6,\"div\"],[8],[0,\"\\n    \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@targetSize\",\"@children\"],[[20,\"x\"],[20,\"y\"],[20,\"s\"],[20,\"targetSize\"],[20,\"seconds\"]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n    \"],[9],[0,\"\\n\"],[9]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiGlimmer" } };
+var __ui_components_SierpinskiGlimmer_template__ = { "id": "OxrzgNPj", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[11,\"style\",[20,\"style\"],null],[8],[0,\"\\n\"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@targetSize\",\"@children\"],[[20,\"x\"],[20,\"y\"],[20,\"s\"],[20,\"targetSize\"],[20,\"seconds\"]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n\"],[9],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiGlimmer" } };
 
 var __decorate$2 = undefined && undefined.__decorate || function (decorators, target, key, desc) {
     var c = arguments.length,
@@ -8163,6 +8169,10 @@ var __decorate$2 = undefined && undefined.__decorate || function (decorators, ta
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 class SierpinskiTriangle extends Component {
+    constructor() {
+        super(...arguments);
+        this.tagName = '';
+    }
     get attrs() {
         let halfTarget = this.args.targetSize / 2;
         var _args = this.args;
@@ -8179,6 +8189,13 @@ class SierpinskiTriangle extends Component {
         } else {
             let s = this.args.s / 2;
             let halfS = s / 2;
+            let slowDown = false;
+            if (slowDown) {
+                let e = performance.now() + 0.8;
+                while (performance.now() < e) {
+                    // Artificially long execution time.
+                }
+            }
             return {
                 s,
                 renderDot,
@@ -8194,7 +8211,7 @@ class SierpinskiTriangle extends Component {
 }
 __decorate$2([tracked('args')], SierpinskiTriangle.prototype, "attrs", null);
 
-var __ui_components_SierpinskiTriangle_template__ = { "id": "IkstrLL/", "block": "{\"symbols\":[\"@children\",\"@targetSize\"],\"statements\":[[4,\"if\",[[22,[\"attrs\",\"renderDot\"]]],null,{\"statements\":[[0,\"    \"],[5,\"SierpinskiDot\",[],[[\"@x\",\"@y\",\"@size\",\"@text\"],[[22,[\"attrs\",\"dotX\"]],[22,[\"attrs\",\"dotY\"]],[21,2,[]],[21,1,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"    \"],[6,\"div\"],[8],[0,\"\\n        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x1\"]],[22,[\"attrs\",\"y1\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x2\"]],[22,[\"attrs\",\"y2\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x3\"]],[22,[\"attrs\",\"y3\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n    \"],[9],[0,\"\\n\"]],\"parameters\":[]}]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiTriangle" } };
+var __ui_components_SierpinskiTriangle_template__ = { "id": "qq4lt0TA", "block": "{\"symbols\":[\"@children\",\"@targetSize\"],\"statements\":[[4,\"if\",[[22,[\"attrs\",\"renderDot\"]]],null,{\"statements\":[[0,\"    \"],[5,\"SierpinskiDot\",[],[[\"@x\",\"@y\",\"@size\",\"@text\"],[[22,[\"attrs\",\"dotX\"]],[22,[\"attrs\",\"dotY\"]],[21,2,[]],[21,1,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x1\"]],[22,[\"attrs\",\"y1\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x2\"]],[22,[\"attrs\",\"y2\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n        \"],[5,\"SierpinskiTriangle\",[],[[\"@x\",\"@y\",\"@s\",\"@children\",\"@targetSize\"],[[22,[\"attrs\",\"x3\"]],[22,[\"attrs\",\"y3\"]],[22,[\"attrs\",\"s\"]],[21,1,[]],[21,2,[]]]],{\"statements\":[],\"parameters\":[]}],[0,\"\\n\"]],\"parameters\":[]}]],\"hasEval\":false}", "meta": { "specifier": "template:/sierpinski-glimmer/components/SierpinskiTriangle" } };
 
 var moduleMap = { 'component:/sierpinski-glimmer/components/SierpinskiDot': SierpinskiDot, 'template:/sierpinski-glimmer/components/SierpinskiDot': __ui_components_SierpinskiDot_template__, 'component:/sierpinski-glimmer/components/SierpinskiGlimmer': SierpinskiGlimmer, 'template:/sierpinski-glimmer/components/SierpinskiGlimmer': __ui_components_SierpinskiGlimmer_template__, 'component:/sierpinski-glimmer/components/SierpinskiTriangle': SierpinskiTriangle, 'template:/sierpinski-glimmer/components/SierpinskiTriangle': __ui_components_SierpinskiTriangle_template__ };
 
