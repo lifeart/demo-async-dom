@@ -261,20 +261,11 @@ function performanceFeedback(delta, actions) {
 
 // put resived actions to dom actions list
 
-let currentGrowSpeed = 10;
-let actionsPool = 0;
-let firstLineTime = Date.now();
-let lastLineTme = Date.now();
+let pushedBackActions = 0;
+
 function actionScheduler(action) {
   if (!shouldSkip(action)) {
     actionsList.push(action);
-    actionsPool++;
-    lastLineTme = Date.now();
-    if (lastLineTme - firstLineTime > fpsMs) {
-      currentGrowSpeed = actionsPool;
-      firstLineTime = lastLineTme;
-      actionsPool = 0;
-    }
   } else {
     skip(action);
   }
@@ -336,15 +327,7 @@ function getOptimalActionsCap() {
     optimalCandidate = 0;
   }
 
-  if (optimalCandidate > currentGrowSpeed) {
-    optimalCandidate = currentGrowSpeed;
-  }
-
   var optimalCap = Math.round((fpsMs * 3) / (avgActionTime || 1) || 10);
-
-  if (optimalCap > currentGrowSpeed) {
-    optimalCap = currentGrowSpeed;
-  }
 
   if (optimalCap > 1) {
     optimalCap--;
@@ -385,9 +368,15 @@ function skip(action, result) {
 
 // if action can't fit in 16ms range push it back
 function pushBackAction(action) {
-  log('pushBackAction', action);
   actionsList.unshift(action);
 }
+
+function pushBackActions(actions) {
+  actions.forEach(action => {
+    pushBackAction(action);
+  });
+}
+
 
 // main render thread
 function actionLoop(startMs) {
@@ -397,12 +386,16 @@ function actionLoop(startMs) {
   log('actions.length', newActions.length);
   var totalActions = newActions.length;
   const totalActionsSize = totalActions;
-  newActions.forEach(action => {
+  pushedBackActions = 0;
+  for (let i = 0; i < newActions.length; i++) {
+    let action = newActions[i];
     if (totalActionsSize < flushSize && performance.now() - startMs > (fpsMs + 1)) {
-      totalActions--;
+      let skipSize = newActions.length - i;
+      totalActions -= skipSize;
+      pushedBackActions += skipSize;
       log('pushBackAction', performance.now() - startMs);
-      pushBackAction(action);
-      return;
+      pushBackActions(newActions.splice(i, skipSize));
+      break;
     }
     performAction(action, (result) => {
       if (result.skip || (result.result && result.skip)) {
@@ -415,7 +408,8 @@ function actionLoop(startMs) {
       // console.log('skip',action,result);
       skip(action, result);
     });
-  });
+  }
+
   var feedbackDelta = performance.now() - startMs;
 
   if (feedbackDelta < minLoop.time && totalActions > 1) {
@@ -461,6 +455,14 @@ function getNode(id, data) {
     return document.querySelector(data.selector);
   }
   return nodesCache[id];
+}
+
+function customCreateComment(data) {
+  if (getNode(data.id)) {
+    return;
+  }
+
+  nodesCache[data.id] = document.createComment(data.textContent);
 }
 
 // DOM action createElement
@@ -820,7 +822,11 @@ function loadImage(data) {
 }
 function customInsertBefore(data) {
   // action:'insertBefore',id:this.id,newId: newElement.id, refId: referenceElement.id})
-  // console.log('customInsertBefore',data);
+
+  if (!data.newId) {
+    return;
+  }
+
   var root = getNode(data.id);
   if (root) {
     var newEl = getNode(data.newId);
@@ -886,6 +892,7 @@ function evaluateAction(data, callback) {
 
   var actions = {
     'createNode': createNode,
+    'createComment': customCreateComment,
     'focus': focusEl,
     'setHTML': setHTML,
     'insertBefore': customInsertBefore,

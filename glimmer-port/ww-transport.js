@@ -67,13 +67,11 @@ function addMiddleware(action) {
 function asyncSendMessage(data) {
 	  middleware(data);
     var request = new Promise(function(resolve, reject) {
+
         _this.sendMessage(data, function(result) {
             resolve(result);
         });
-        /*
-        _this.sendMessage(data);
-        resolve({});
-        */
+
     });
 
     var waitingStates = [

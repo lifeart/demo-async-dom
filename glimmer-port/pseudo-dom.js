@@ -262,7 +262,6 @@ class Element {
     if (index < 0) {
       index = 0;
     }
-    // console.log('insertBefore','newEl',newElement,'this',this,'ref',referenceElement);
     newElement.setParentNode(this);
     this.children.splice( index, 0, newElement );
     asyncMessage({action:'insertBefore',id:this.id,newId: newElement.id, refId: referenceElement?referenceElement.id:null});
@@ -739,7 +738,7 @@ class Document {
     return 9;
   }
   createComment(text) {
-    return new CommentNode(text);
+    return new Proxy(this._createCommentElement(text), windowProxy);
     // return `<!--${text}-->`;
   }
   getElementsByTagName(tagName) {
@@ -835,6 +834,16 @@ class Document {
   createElement(nodeName) {
     // console.log('createElement',nodeName,arguments);
     return new Proxy(this._createElement(nodeName),windowProxy);
+  }
+  _createCommentElement(textContent) {
+    this.nodeCounter++;
+    var nodeId = `async-dom-${this.nodeCounter}`;
+    var node = new CommentNode(textContent);
+    this.allNodes.push(node);
+    node._root = this;
+    this._ids[node._id] = node;
+    asyncMessage({ action: 'createComment', id: node.id, textContent: textContent || '' });
+    return new Proxy(node, windowProxy);
   }
   _createElement(name,textContent) {
       this.nodeCounter++;
@@ -994,10 +1003,14 @@ function goFrame() {
     frameActions[i](p);
   }
   frameActions.splice(0, length);
-  const delta = (frameWindow-(performance.now()-p))/1000;
+ 
   // console.log(frameWindow-(performance.now()-p));
   //console.log('delta',delta);
-  setTimeout(goFrame,delta);
+  //Promise.all(WAITING_LIST).then(()=>{
+    const delta = (frameWindow - (performance.now() - p)) / 1000;
+    setTimeout(goFrame, delta);
+  //});
+
   // console.log(performance.now()-p);
 }
 
