@@ -4,6 +4,7 @@
 * [Glimmer.js App](https://lifeart.github.io/demo-async-dom/glimmer-port/index.html) with async dom and webworkers
 * [Glimmer.js App (no AsyncDom)](https://lifeart.github.io/sierpinski-glimmer/)
 
+* [async PreventDefault/StopPropagation](https://github.com/lifeart/async-event) - as part of concept
 ------------------------------------------
 # Latest codebase in /glimmer-port/ folder
 ------------------------------------------
