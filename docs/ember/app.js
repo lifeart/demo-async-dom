@@ -576,7 +576,7 @@ function setAttribute(data) {
 
 // DOM action setStyle
 function setStyle(data) {
-  console.log('setStyle',data);
+  // console.log('setStyle',data);
 	var node = getNode(data.id, data);
 	if (!node) {
 		return;
