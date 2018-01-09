@@ -38,7 +38,7 @@ window.setTimeout = self.setTimeout;
 
 self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/react/16.2.0/umd/react.production.min.js');
 self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.2.0/umd/react-dom.production.min.js');
-self.importScripts('/ww/app.js');
+self.importScripts('ww/app.js');
 // self.importScripts('https://emberobserver.com/assets/vendor-63fb928166ab18a0d8a59b4c0239d88b.js');
 //var regeneratorRuntime = window.regeneratorRuntime;
 // self.importScripts('https://emberobserver.com/assets/ember-observer-6183d2e97f093c7a7b31ab8faeda96d6.js');
