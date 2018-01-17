@@ -55,7 +55,7 @@ var maxTime = {
 var avgActionTime = 0;
 
 // viewport visiblity cache (frames)
-var viewportVisibility = 60;
+var viewportVisibility = 600;
 
 // value cache for getBoundingClientRect;
 var boundingClientRectCache = {};
@@ -110,13 +110,20 @@ function sendMessages(items) {
 		}
 	})
 }
+// if ('requestIdleCallback' in window) {
+// 	requestIdleCallback(()=>{
+// 		worker.postMessage(data);
+// 	});
+// } else {
+// 	worker.postMessage(data);
+// }
 // send single message to ww
 function sendMessage(data) {
-  worker.postMessage(data);
+	worker.postMessage(data);
 }
 
-worker.onmessage = (e)=>{
-  actionScheduler(e.data);
+worker.onmessage = function(e) {
+	actionScheduler(e.data);
 };
 
 // Listen for scroll events
@@ -239,7 +246,7 @@ function smartBatchSort(actions) {
     'bodyAppendChild': 5,
 		'removeNode': 6
   };
-  return actions.sort((a,b)=>{
+  return actions.sort(function(a,b){
     return priorityActionsMap[a.action] - priorityActionsMap[b.action];
   });
   // priority - create, style, append
@@ -368,7 +375,7 @@ function actionLoop(startMs) {
   log('actions.length',newActions.length);
   var totalActions = newActions.length;
   const totalActionsSize = totalActions;
-  newActions.forEach(action => {
+  newActions.forEach(function(action) {
     if (totalActionsSize < flushSize && performance.now() - startMs > (fpsMs + 1)) {
       totalActions--;
       log('pushBackAction', performance.now() - startMs);
@@ -404,8 +411,9 @@ function actionLoop(startMs) {
   }
   if (totalActions) {
     performanceFeedback(feedbackDelta,totalActions);
-  }
-  requestAnimationFrame(actionLoop);
+	}
+
+	requestAnimationFrame(actionLoop);
 }
 
 // simple logging function
