@@ -6,7 +6,7 @@
 * [Glimmer.js App (no AsyncDom)](https://lifeart.github.io/sierpinski-glimmer/)
 * [React App](https://lifeart.github.io/demo-async-dom/react-port/index.html) with async dom and webworkers
 ------------------------------------------
-# Latest codebase in /glimmer-port/ folder
+# Latest codebase in https://github.com/lifeart/async-dom
 ------------------------------------------
 
 # Why?
