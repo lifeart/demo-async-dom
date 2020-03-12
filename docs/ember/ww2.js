@@ -2,8 +2,20 @@ var window = undefined;
 var _this = self;
 
 
-self.importScripts('ww-transport.js');
-self.importScripts('pseudo-dom.js');
+var _eai_d = (d,e,f) => {
+  window.define(d, e, f);
+};
+var _eai_r = (a,b) => {
+  console.log('_eai_r', a,b);
+};
+
+function i() {
+  console.log('iiiii', ...arguments);
+}
+self.importScripts('./ww-transport.js');
+
+self.importScripts('./pseudo-dom.js');
+
 self.importScripts('mdrnizer.js');
 
 var _setTimeout = self.setTimeout;
@@ -34,9 +46,6 @@ window.setTimeout = self.setTimeout;
 //   },time);
 // };
 
-self.importScripts('https://api.emberjs.com/assets/vendor-829cc0174ff3c9d56c6813fd722aafc0.js');
-// self.importScripts('https://emberobserver.com/assets/vendor-63fb928166ab18a0d8a59b4c0239d88b.js');
+self.importScripts('./vendor-8829232c84130863b1988edd68288c26.js');
 var regeneratorRuntime = window.regeneratorRuntime;
-// self.importScripts('https://emberobserver.com/assets/ember-observer-6183d2e97f093c7a7b31ab8faeda96d6.js');
-self.importScripts('https://api.emberjs.com/assets/ember-api-docs-f46418e6a3373d50c23cbb8751928ed5.js');
-// self.importScripts('http://pureqml.com/qml.index.min.js');
+self.importScripts('./ember-api-docs-25572d828074f773af58544e93b72153.js');
