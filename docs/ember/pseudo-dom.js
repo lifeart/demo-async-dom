@@ -854,6 +854,13 @@ class Document {
     if (q === 'body') {
       return this.body;
     }
+    if (q === 'body, html') {
+      return {
+        scrollTo() {
+
+        }
+      }
+    }
     if (q === 'meta[name="ember-api-docs/config/environment"]') {
       return {
         getAttribute() {
@@ -874,6 +881,9 @@ class Document {
   createElement(nodeName) {
     // console.log('createElement',nodeName,arguments);
     return new Proxy(this._createElement(nodeName),windowProxy);
+  }
+  defaultView() {
+    return this;
   }
   _createElement(name,textContent) {
       this.nodeCounter++;
