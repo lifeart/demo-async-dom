@@ -2484,7 +2484,7 @@ var t=Object.create,n=Object.setPrototypeOf,r=Object.defineProperty
 function i(e,t){for(var n=0;n<t.length;n++){var i=t[n]
 i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),r(e,i.key,i)}}}),e("ember-browser-environment",["exports"],function(e){"use strict"
 var t="object"==typeof self&&null!==self&&self.Object===Object&&"undefined"!=typeof Window&&self.constructor===Window&&"object"==typeof document&&null!==document&&self.document===document&&"object"==typeof location&&null!==location&&self.location===location&&"object"==typeof history&&null!==history&&self.history===history&&"object"==typeof navigator&&null!==navigator&&self.navigator===navigator&&"string"==typeof navigator.userAgent,n=t?self:null,r=t?self.location:null,i=t?self.history:null,o=t?self.navigator.userAgent:"Lynx (textmode)",s=!!t&&(!!n.chrome&&!n.opera),a=!!t&&"undefined"!=typeof InstallTrigger
-e.window=n,e.location=r,e.history=i,e.userAgent=o,e.isChrome=s,e.isFirefox=a,e.hasDOM=t}),e("ember-console/index",["exports","@ember/debug","@ember/deprecated-features"],function(e,t,n){"use strict"
+e.window=n,e.location=r,e.history=i,e.userAgent=o,e.isChrome=s,e.isFirefox=a,e.hasDOM=true}),e("ember-console/index",["exports","@ember/debug","@ember/deprecated-features"],function(e,t,n){"use strict"
 var r=void 0
 n.LOGGER&&(r={log:function(){var e
 return(e=console).log.apply(e,arguments)},warn:function(){var e

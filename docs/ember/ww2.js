@@ -16,7 +16,6 @@ self.importScripts('./ww-transport.js');
 
 self.importScripts('./pseudo-dom.js');
 
-self.importScripts('mdrnizer.js');
 
 var _setTimeout = self.setTimeout;
 var _setInterval = self.setInterval;
@@ -46,6 +45,8 @@ window.setTimeout = self.setTimeout;
 //   },time);
 // };
 
-self.importScripts('./vendor-8829232c84130863b1988edd68288c26.js');
+self.importScripts('./mdrnizer.js');
+
+self.importScripts('./vendor-8829232c84130863b1988edd68288c26.js?t=-1');
 var regeneratorRuntime = window.regeneratorRuntime;
 self.importScripts('./ember-api-docs-25572d828074f773af58544e93b72153.js');
